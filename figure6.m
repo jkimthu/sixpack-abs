@@ -1,4 +1,4 @@
-%% figure6
+%% figure 6
 
 
 %  Goal: determine whether pre-steady-state cells in stable environments
@@ -15,23 +15,21 @@
 %  Strategy: 
 %
 %       0. initialize experiment data
-%       1. for experiment 2018-02-01, find all full cell cycles in
-%          low, ave and high conditions PRIOR TO STEADY-STATE
+%       1. find all full cell cycles in low, ave and high conditions
+%          PRIOR TO STEADY-STATE
 %               - from figure 7, dV/dt vs time for 2018-02-01 data, we see
 %                 that all stable environments are not yet at steady-state
 %                 between hours 0 - 3.
-%
 %       2. determine division size and birth size of each cycle
 %       3. plot division size vs birth size
 
 
 
-%  Last edit: jen, 2018 April 29
+%  Last edit: jen, 2018 April 30
+%  Commit: single-cell figure 6 for 2018-02-01 data
 
-%  Commit: 
 
 %  OK let's go!
-
 
 %% initialize
 
@@ -46,11 +44,8 @@ dataIndex = find(~cellfun(@isempty,storedMetaData));
 experimentCount = length(dataIndex);
 
 
-% 1. for all experiments in dataset
-e = 14;  % 14 = index for experiment 2018-02-01
-
-
 % 1. collect experiment meta data
+e = 14;  % 14 = index for experiment 2018-02-01
 index = dataIndex(e);
 date = storedMetaData{index}.date;
 timescale = storedMetaData{index}.timescale;
@@ -75,7 +70,6 @@ palette = {'DodgerBlue','Indigo','GoldenRod','FireBrick'};
 environments = {'fluc','low','ave','high'};
 
 for condition = 1:length(palette)
-    
     
     % 5. isolate condition specific data
     conditionData = exptData(exptData(:,23) == condition,:);  % col 23 = cond vals

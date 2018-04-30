@@ -1,17 +1,18 @@
-%% whichGrowthModel
+%% figures 10 and 11
 
 
 %  Goal: determine how well birth size and interdivision time are predicted
-%        by single-cell average dV/dt, plotting 2018-02-01 data:
+%        by single-cell average dV/dt, plotting single experiment data:
 
 %        (i) birth size vs dV/dt
 %       (ii) inter-division time vs dV/dt
 
 
 %  Strategy: 
+
 %       0. initialize experiment data
-%       1. for all cell cycles in all experiments,
-%       2. determine birth size of each cycle, inter-division time and
+%       1. analyze cell cycles born later than 3 hrs into experiment
+%       2. store birth size of each cycle, inter-division time and
 %          mean dV/dt of each cycle
 %       3. plot mean birth size vs mean dV/dt
 %       4. plot mean interdiv time vs dV/dt
@@ -20,11 +21,10 @@
 
 
 %  Last edit: jen, 2018 April 30
+%  Commit: single-cell figures 10 and 11 for 2018-02-01 data
 
-%  Commit: 
 
 %  OK let's go!
-
 
 %% initialize
 
@@ -91,7 +91,7 @@ for condition = 1:length(environments)
     volume = conditionData_trim(:,12);             % col 12  = volume (Va)
     rawTime = conditionData_trim(:,2)/3600;        % col 2  = timestamps from ND2 (sec converted to hr)
     
-    dvdt_data = dvdt(conditionData_trim, timescale);
+    dvdt_data = dvdt(conditionData_trim, timescale, date);
     dVdt = dvdt_data(:,1);
     
     
