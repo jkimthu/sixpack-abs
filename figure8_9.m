@@ -20,7 +20,7 @@
 
 
 %  Last edit: jen, 2018 April 30
-%  Commit: determine which x is which 5 min experiment 
+%  Commit: re-run after editing dvdt calculations to include 2017-10-10 in figure
 
 %  OK let's go!
 
@@ -40,7 +40,7 @@ experimentCount = length(dataIndex);
 
 % 1. for all experiments in dataset
 exptCounter = 0;
-for e = 5:7%1:experimentCount
+for e = 1:experimentCount
     
     
     % 1. collect experiment meta data
@@ -66,10 +66,10 @@ for e = 5:7%1:experimentCount
     
     
     % 3. compile experiment data matrix
-    %xy_start = min(min(storedMetaData{index}.xys));
-    %xy_end = max(max(storedMetaData{index}.xys));
-    %exptData = buildDM(D5, M, M_va, T, xy_start, xy_end,e);
-    exptData = buildDM(D5, M, M_va, T, 1, 10,e);
+    xy_start = min(min(storedMetaData{index}.xys));
+    xy_end = max(max(storedMetaData{index}.xys));
+    exptData = buildDM(D5, M, M_va, T, xy_start, xy_end,e);
+    %exptData = buildDM(D5, M, M_va, T, 1, 10,e);
     clear D5 M M_va T xy_start xy_end
     
     
@@ -77,7 +77,7 @@ for e = 5:7%1:experimentCount
     palette = {'DodgerBlue','Indigo','GoldenRod','FireBrick'};
     shapes = {'o','x','square','*'};
     
-    for condition = 1%:length(bubbletime)
+    for condition = 1:length(bubbletime)
         
         
         % 5. isolate condition specific data
@@ -103,7 +103,7 @@ for e = 5:7%1:experimentCount
         interdivTime = conditionData_trim(:,8)/60;     % col 8  = curve duration (sec converted to min)
         volume = conditionData_trim(:,12);             % col 12  = volume (Va)
         
-        dvdt_data = dvdt(conditionData_trim, timescale);
+        dvdt_data = dvdt(conditionData_trim, timescale, date);
         dVdt = dvdt_data(:,1);
         
         
@@ -128,8 +128,8 @@ for e = 5:7%1:experimentCount
         end
         
         % 12. plot
-        %color = rgb(palette(condition));
-        color = rgb(palette(e-3));
+        color = rgb(palette(condition));
+        %color = rgb(palette(e-3));
         
         if condition == 1 && timescale == 300
             xmark = shapes{2};
@@ -159,6 +159,7 @@ for e = 5:7%1:experimentCount
         ylabel('birth size (cubic um)')
         xlabel('dV/dt (cubic um/hr)')
         title('population averages from all experiments')
+        axis([0 19 0 8])
         
         % (ii) inter-division time vs. dVdt
         figure(9)
@@ -169,6 +170,7 @@ for e = 5:7%1:experimentCount
         ylabel('inter-division time (min)')
         xlabel('dV/dt (cubic um/hr)')
         title('population averages from all experiments')
+        axis([0 19 0 80])
 
     
     end
