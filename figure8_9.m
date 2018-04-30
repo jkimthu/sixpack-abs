@@ -20,7 +20,7 @@
 
 
 %  Last edit: jen, 2018 April 30
-%  Commit: figures 8 and 9, plots population-averaged birth size vs dV/dt and population-averaged interdiv time vs dV/dt for all expts 
+%  Commit: determine which x is which 5 min experiment 
 
 %  OK let's go!
 
@@ -40,7 +40,7 @@ experimentCount = length(dataIndex);
 
 % 1. for all experiments in dataset
 exptCounter = 0;
-for e = 1:experimentCount
+for e = 5:7%1:experimentCount
     
     
     % 1. collect experiment meta data
@@ -66,17 +66,18 @@ for e = 1:experimentCount
     
     
     % 3. compile experiment data matrix
-    xy_start = min(min(storedMetaData{index}.xys));
-    xy_end = max(max(storedMetaData{index}.xys));
-    exptData = buildDM(D5, M, M_va, T, xy_start, xy_end,e);
-    clear D5 M M_va T xy_start xy_end e
+    %xy_start = min(min(storedMetaData{index}.xys));
+    %xy_end = max(max(storedMetaData{index}.xys));
+    %exptData = buildDM(D5, M, M_va, T, xy_start, xy_end,e);
+    exptData = buildDM(D5, M, M_va, T, 1, 10,e);
+    clear D5 M M_va T xy_start xy_end
     
     
     % 5. initialize colors for plotting
     palette = {'DodgerBlue','Indigo','GoldenRod','FireBrick'};
     shapes = {'o','x','square','*'};
     
-    for condition = 1:length(bubbletime)
+    for condition = 1%:length(bubbletime)
         
         
         % 5. isolate condition specific data
@@ -127,7 +128,9 @@ for e = 1:experimentCount
         end
         
         % 12. plot
-        color = rgb(palette(condition));
+        %color = rgb(palette(condition));
+        color = rgb(palette(e-3));
+        
         if condition == 1 && timescale == 300
             xmark = shapes{2};
         elseif condition == 1 && timescale == 900
