@@ -18,9 +18,8 @@
 
 
 
-%  Last edit: jen, 2018 May 1
-%  Commit: adder or sizer? population-average division volume vs birth volume,
-%          and inter-div time vs. birth volume
+%  Last edit: jen, 2018 May 2
+%  Commit: add expected line of V_div = 2 * V_birth on figure 1
 
 
 %  OK let's go!
@@ -140,20 +139,8 @@ for e = 1:experimentCount
     V_div_stds = std(V_division);
     interdiv_stds = std(unique_interdivs);
     
-    % (i) inter-division time vs. birth size
-    figure(3)
-    errorbar(V_birth_means,interdiv_means,interdiv_stds,'Color',color)
-    hold on
-    plot(V_birth_means,interdiv_means,'Marker',xmark,'Color',color)
-    hold on
-    xlabel('birth size (cubic um)')
-    ylabel('inter-division time (min)')
-    title('population averages from all experiments')
-    axis([0 10 0 100])
-    
-    
-    % (ii) division size vs. birth size
-    figure(4)
+    % (i) division size vs. birth size
+    figure(1)
     errorbar(V_birth_means,V_div_means,V_div_stds,'Color',color)
     hold on
     plot(V_birth_means,V_div_means,'Marker',xmark,'Color',color)
@@ -161,9 +148,34 @@ for e = 1:experimentCount
     xlabel('birth size (cubic um)')
     ylabel('division size (cubic um)')
     title('population averages from all experiments')
-    axis([0 8 0 17])
+    axis([1 7 0 16])
 
+
+    % (ii) inter-division time vs. birth size
+%     figure(2)
+%     errorbar(V_birth_means,interdiv_means,interdiv_stds,'Color',color)
+%     hold on
+%     plot(V_birth_means,interdiv_means,'Marker',xmark,'Color',color)
+%     hold on
+%     xlabel('birth size (cubic um)')
+%     ylabel('inter-division time (min)')
+%     title('population averages from all experiments')
+%     axis([0 10 0 100])
+%     
+   
     end  
     
     
 end
+
+% expectations
+expected_color = rgb('SlateGray');
+expected_Vb = linspace(1,8,8);
+expected_Vdiv = 2* expected_Vb ;
+
+figure(1)
+hold on
+plot(expected_Vb,expected_Vdiv,'-','Color',expected_color);
+
+
+
