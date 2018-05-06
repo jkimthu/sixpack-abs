@@ -17,8 +17,8 @@
 %       5. call data from structures for plotting
 
 
-% Last edit: jen, 2018 May 4
-% Commit: plot monod using instantaneous dV/dt from all data after 3 hours
+% Last edit: jen, 2018 May 6
+% Commit: edit dt calculation, as done in figure21
 
 % OK let's go!
 
@@ -33,8 +33,8 @@ cd('/Users/jen/Documents/StockerLab/Data_analysis/')
 load('storedMetaData.mat')
 
 dataIndex = find(~cellfun(@isempty,storedMetaData));
-dVdtData = cell(size(storedMetaData));
-dVdtData_normalized = cell(size(storedMetaData));
+dVdtData_newdVdt = cell(size(storedMetaData));
+dVdtData_normalized_newdVdt = cell(size(storedMetaData));
 
 % initialize summary vectors for calculated data
 experimentCount = length(dataIndex);
@@ -102,16 +102,26 @@ for e = 1:experimentCount
         volumes = conditionData_trim2(:,12);        % col 12 = calculated va_vals (cubic um)
         timestamps = conditionData_trim2(:,2);      % col 2  = timestamp in seconds
         isDrop = conditionData_trim2(:,5);          % col 5  = isDrop, 1 marks a birth event 
+        curveFinder = conditionData_trim2(:,6);     % col 6  = curve finder (ID of curve in condition)
         
-        dV_raw = [NaN; diff(volumes)];
-        dt = [NaN; diff(timestamps)];
-        dt(dt == 0) = NaN;
-        dVdt = dV_raw./dt * 3600;
-        dVdt_normalizedByVol = dVdt./volumes;
-        
-        dVdt(isDrop == 1) = NaN;
-        dVdt_normalizedByVol(isDrop == 1) = NaN;
-        %clear conditionData
+        % calculate mean timestep
+        if isempty(volumes)
+            dVdt = [];
+            dVdt_normalizedByVol = [];
+        else
+            curveIDs = unique(curveFinder);
+            firstFullCurve = curveIDs(2);
+            firstFullCurve_timestamps = timestamps(curveFinder == firstFullCurve);
+            dt = mean(diff(firstFullCurve_timestamps)); % timestep in seconds
+            
+            dV_raw = [NaN; diff(volumes)];
+            dVdt = dV_raw/dt;
+            dVdt_normalizedByVol = dVdt./volumes;
+            
+            dVdt(isDrop == 1) = NaN;
+            dVdt_normalizedByVol(isDrop == 1) = NaN;
+            %clear conditionData
+        end
         
         
         % 6. calculate average and s.e.m. of stabilized data        
@@ -143,8 +153,8 @@ for e = 1:experimentCount
     end
     
     % 10. store data from all conditions into measured data structure        
-    dVdtData{index} = compiled_dVdt;
-    dVdtData_normalized{index} = compiled_dVdt_normalized;
+    dVdtData_newdVdt{index} = compiled_dVdt;
+    dVdtData_normalized_newdVdt{index} = compiled_dVdt_normalized;
     
     clear compiled_dVdt
 end
@@ -152,8 +162,8 @@ end
 
 %% 11. Save new data into stored data structure
 cd('/Users/jen/Documents/StockerLab/Data_analysis/')
-save('dVdtData.mat','dVdtData')
-save('dVdtData_normalized.mat','dVdtData_normalized')
+save('dVdtData_newdVdt.mat','dVdtData_newdVdt')
+save('dVdtData_normalized_newdVdt.mat','dVdtData_normalized_newdVdt')
 
 %% 12. plot average biovolume production rate over time
 clc
@@ -161,8 +171,8 @@ clear
 
 cd('/Users/jen/Documents/StockerLab/Data_analysis/')
 load('storedMetaData.mat')
-load('dVdtData.mat')
-load('dVdtData_normalized.mat')
+load('dVdtData_newdVdt.mat')
+load('dVdtData_normalized_newdVdt.mat')
 dataIndex = find(~cellfun(@isempty,storedMetaData));
 experimentCount = length(dataIndex);
 
@@ -194,8 +204,8 @@ for e = 1:experimentCount
     timescale = storedMetaData{index}.timescale;
     
     % isolate biomass prod data for current experiment
-    experiment_dVdt_data = dVdtData{index};
-    experiment_dVdt_norm = dVdtData_normalized{index};
+    experiment_dVdt_data = dVdtData_newdVdt{index};
+    experiment_dVdt_norm = dVdtData_normalized_newdVdt{index};
     
     % isolate concentration data for current experiment
     concentration = storedMetaData{index}.concentrations;
