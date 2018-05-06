@@ -18,8 +18,8 @@
 
 
 % Last edit: jen, 2018 May 6
-% Commit: edit dt calculation, to avoid erroneous timestamps from
-%         transistions between different tracks
+% Commit: edit edited dt calculation, to report NaN for dV/dt stats if no
+%         data exists after 3 hrs (bubble in 2018-01-12 high)
 
 % OK let's go!
 
@@ -34,8 +34,8 @@ cd('/Users/jen/Documents/StockerLab/Data_analysis/')
 load('storedMetaData.mat')
 
 dataIndex = find(~cellfun(@isempty,storedMetaData));
-dVdtData_fullOnly = cell(size(storedMetaData));
-dVdtData_fullOnly_normalized = cell(size(storedMetaData));
+dVdtData_fullOnly_newdVdt = cell(size(storedMetaData));
+dVdtData_fullOnly_normalized_newdVdt = cell(size(storedMetaData));
 
 % initialize summary vectors for calculated data
 experimentCount = length(dataIndex);
@@ -111,21 +111,25 @@ for e = 1:experimentCount
         curveFinder = conditionData_trim2(:,6);     % col 6  = curve finder (ID of curve in condition)
         
         % calculate mean timestep
-        curveIDs = unique(curveFinder);
-        firstFullCurve = curveIDs(2);
-        firstFullCurve_timestamps = timestamps(curveFinder == firstFullCurve);
-        dt = mean(diff(firstFullCurve_timestamps)); % timestep in seconds
+        if isempty(volumes)
+            dVdt = [];
+            dVdt_normalizedByVol = [];
+        else
+            curveIDs = unique(curveFinder);
+            firstFullCurve = curveIDs(2);
+            firstFullCurve_timestamps = timestamps(curveFinder == firstFullCurve);
+            dt = mean(diff(firstFullCurve_timestamps)); % timestep in seconds
+            
+            dV_raw = [NaN; diff(volumes)];
+            dVdt = dV_raw/dt;
+            dVdt_normalizedByVol = dVdt./volumes;
+            
+            dVdt(isDrop == 1) = NaN;
+            dVdt_normalizedByVol(isDrop == 1) = NaN;
+            %clear conditionData
+        end
         
-        dV_raw = [NaN; diff(volumes)];
-        dVdt = dV_raw/dt;
-        dVdt_normalizedByVol = dVdt./volumes;
-        
-        dVdt(isDrop == 1) = NaN;
-        dVdt_normalizedByVol(isDrop == 1) = NaN;
-        %clear conditionData
-        
-        
-        % 6. calculate average and s.e.m. of stabilized data        
+        % 7. calculate average and s.e.m. of stabilized data        
         mean_dVdt = nanmean(dVdt);
         count_dVdt = length(dVdt(~isnan(dVdt)));
         std_dVdt = nanstd(dVdt);
@@ -137,7 +141,7 @@ for e = 1:experimentCount
         sem_dVdt_normalized = std_dVdt_normalized./sqrt(count_dVdt_normalized);
         
         
-        % 9. accumulate data for storage / plotting        
+        % 8. accumulate data for storage / plotting        
         compiled_dVdt{c}.mean = mean_dVdt;
         compiled_dVdt{c}.std = std_dVdt;
         compiled_dVdt{c}.count = count_dVdt;
@@ -154,8 +158,8 @@ for e = 1:experimentCount
     end
     
     % 10. store data from all conditions into measured data structure        
-    dVdtData_fullOnly{index} = compiled_dVdt;
-    dVdtData_fullOnly_normalized{index} = compiled_dVdt_normalized;
+    dVdtData_fullOnly_newdVdt{index} = compiled_dVdt;
+    dVdtData_fullOnly_normalized_newdVdt{index} = compiled_dVdt_normalized;
     
     clear compiled_dVdt compiled_dVdt_normalized
 end
@@ -163,8 +167,8 @@ end
 
 %% 11. Save new data into stored data structure
 cd('/Users/jen/Documents/StockerLab/Data_analysis/')
-save('dVdtData_fullOnly.mat','dVdtData_fullOnly')
-save('dVdtData_fullOnly_normalized.mat','dVdtData_fullOnly_normalized')
+save('dVdtData_fullOnly_newdVdt.mat','dVdtData_fullOnly_newdVdt')
+save('dVdtData_fullOnly_normalized_newdVdt.mat','dVdtData_fullOnly_normalized_newdVdt')
 
 %% 12. plot average biovolume production rate over time
 clc
@@ -172,8 +176,8 @@ clear
 
 cd('/Users/jen/Documents/StockerLab/Data_analysis/')
 load('storedMetaData.mat')
-load('dVdtData_fullOnly.mat')
-load('dVdtData_fullOnly_normalized.mat')
+load('dVdtData_fullOnly_newdVdt.mat')
+load('dVdtData_fullOnly_normalized_newdVdt.mat')
 dataIndex = find(~cellfun(@isempty,storedMetaData));
 experimentCount = length(dataIndex);
 
@@ -205,8 +209,8 @@ for e = 1:experimentCount
     timescale = storedMetaData{index}.timescale;
     
     % isolate biomass prod data for current experiment
-    experiment_dVdt_data = dVdtData_fullOnly{index};
-    experiment_dVdt_norm = dVdtData_fullOnly_normalized{index};
+    experiment_dVdt_data = dVdtData_fullOnly_newdVdt{index};
+    experiment_dVdt_norm = dVdtData_fullOnly_normalized_newdVdt{index};
     
     % isolate concentration data for current experiment
     concentration = storedMetaData{index}.concentrations;
@@ -244,7 +248,7 @@ for e = 1:experimentCount
         hold on
         plot(log(concentration(c)), experiment_dVdt_data{c}.mean,'Marker',xmark,'MarkerSize',10,'Color',color)
         hold on
-        ylabel('dV/dt (cubic um/hr)')
+        ylabel('dV/dt (cubic um/sec)')
         xlabel('log fold LB dilution')
         title(strcat('Population-averaged dV/dt vs log LB dilution, full cycles ONLY'))
         
@@ -254,7 +258,7 @@ for e = 1:experimentCount
         hold on
         plot(log(concentration(c)), experiment_dVdt_norm{c}.mean,'Marker',xmark,'MarkerSize',10,'Color',color)
         hold on
-        ylabel('(dV/dt)/V (1/hr)')
+        ylabel('(dV/dt)/V (1/sec)')
         xlabel('log fold LB dilution')
         title(strcat('Population-averaged volume-normalized dV/dt vs log LB dilution, full cycles ONLY'))
         
