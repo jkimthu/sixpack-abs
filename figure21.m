@@ -17,8 +17,9 @@
 %       5. call data from structures for plotting
 
 
-% Last edit: jen, 2018 May 4
-% Commit: plot monod using instantaneous dV/dt after 3 hours from full cycles ONLY
+% Last edit: jen, 2018 May 6
+% Commit: edit dt calculation, to avoid erroneous timestamps from
+%         transistions between different tracks
 
 % OK let's go!
 
@@ -106,12 +107,17 @@ for e = 1:experimentCount
         % 6. isolate volume (Va), dVdt and timestamp data from current condition
         volumes = conditionData_trim2(:,12);        % col 12 = calculated va_vals (cubic um)
         timestamps = conditionData_trim2(:,2);      % col 2  = timestamp in seconds
-        isDrop = conditionData_trim2(:,5);          % col 5  = isDrop, 1 marks a birth event 
+        isDrop = conditionData_trim2(:,5);          % col 5  = isDrop, 1 marks a birth event
+        curveFinder = conditionData_trim2(:,6);     % col 6  = curve finder (ID of curve in condition)
+        
+        % calculate mean timestep
+        curveIDs = unique(curveFinder);
+        firstFullCurve = curveIDs(2);
+        firstFullCurve_timestamps = timestamps(curveFinder == firstFullCurve);
+        dt = mean(diff(firstFullCurve_timestamps)); % timestep in seconds
         
         dV_raw = [NaN; diff(volumes)];
-        dt = [NaN; diff(timestamps)];
-        dt(dt == 0) = NaN;
-        dVdt = dV_raw./dt * 3600;
+        dVdt = dV_raw/dt;
         dVdt_normalizedByVol = dVdt./volumes;
         
         dVdt(isDrop == 1) = NaN;
