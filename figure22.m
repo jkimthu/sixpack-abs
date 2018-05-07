@@ -19,9 +19,8 @@
 
 
 
-%  Last edit: Jen Nguyen, 2018 May 6
-%  Commit: plot growth under fluctuations, raw and normalized to Jensens
-%          expectations
+%  Last edit: Jen Nguyen, 2018 May 7
+%  Commit: add G_high and G_low to expectations plots
 
 
 
@@ -196,10 +195,23 @@ hold on
 errorbar(-1,G_monod,stableRates_std(ave),'Color',rgb('SlateGray'),'LineWidth',2);
 hold on
 plot(6, G_jensens,'o','Color',rgb('SlateGray'),'MarkerSize',10,'LineWidth',2)
-axis([-1 6 0 12])
+hold on
+
+plot(0, stableRates_mean(low),'o','Color',rgb('SlateGray'),'MarkerSize',8,'LineWidth',1)
+hold on 
+errorbar(0,stableRates_mean(low),stableRates_std(low),'Color',rgb('SlateGray'),'LineWidth',1);
+hold on
+
+plot(5, stableRates_mean(high),'o','Color',rgb('SlateGray'),'MarkerSize',8,'LineWidth',1)
+hold on 
+errorbar(5,stableRates_mean(high),stableRates_std(high),'Color',rgb('SlateGray'),'LineWidth',1);
+hold on
+
+axis([-1 6 0 18])
 title('growth expectations')
 xlabel('fluctuating timescale')
 ylabel('mean dV/dt (cubic um/hr)')
+
 
 % normalized by G_jensens
 figure(3)
@@ -212,7 +224,18 @@ hold on
 errorbar(-1,G_monod/G_jensens,stableRates_std(ave)./G_jensens,'Color',rgb('SlateGray'),'LineWidth',2);
 hold on
 plot(6, G_jensens/G_jensens,'o','Color',rgb('SlateGray'),'MarkerSize',10,'LineWidth',2)
-axis([-1 6 0 1.2])
+
+plot(0, stableRates_mean(low)/G_jensens,'o','Color',rgb('SlateGray'),'MarkerSize',8,'LineWidth',1)
+hold on 
+errorbar(0,stableRates_mean(low)/G_jensens,stableRates_std(low)/G_jensens,'Color',rgb('SlateGray'),'LineWidth',1);
+hold on
+
+plot(5, stableRates_mean(high)/G_jensens,'o','Color',rgb('SlateGray'),'MarkerSize',9,'LineWidth',1)
+hold on 
+errorbar(5,stableRates_mean(high)/G_jensens,stableRates_std(high)/G_jensens,'Color',rgb('SlateGray'),'LineWidth',1);
+hold on
+
+axis([-1 6 0 2])
 title('growth, relative to Jensens expectations')
 xlabel('fluctuating timescale')
 ylabel('mean dV/dt, normalized to G_jensens')
