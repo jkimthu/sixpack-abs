@@ -19,8 +19,8 @@
 
 
 
-%  Last edit: Jen Nguyen, 2018 May 7
-%  Commit: add G_high and G_low to expectations plots
+%  Last edit: Jen Nguyen, 2018 May 9
+%  Commit: test, omit 2018-01-12 and 2018-01-13 from analysis. 
 
 
 
@@ -137,6 +137,16 @@ for e = 1:experimentCount
     
     % exclude outlier from analysis
     if strcmp(date, '2017-10-31') == 1 || strcmp (timescale, 'monod') == 1
+        disp(strcat(date,': excluded from analysis'))
+        continue
+    end
+    
+    if strcmp(date, '2018-01-12') == 1
+        disp(strcat(date,': excluded from analysis'))
+        continue
+    end
+    
+    if strcmp(date, '2018-01-13') == 1
         disp(strcat(date,': excluded from analysis'))
         continue
     end
