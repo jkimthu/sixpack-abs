@@ -19,8 +19,9 @@
 
 
 
-%  Last edit: jen, 2018 April 30
-%  Commit: re-run after editing dvdt calculations to include 2017-10-10 in figure
+%  Last edit: jen, 2018 May 14
+%  Commit: replace dvdt function with in-script calculation of dV/dt,
+%          replace method of id-ing unique cell cycles (use curveID instead of unique interdiv time) 
 
 %  OK let's go!
 
@@ -99,31 +100,46 @@ for e = 1:experimentCount
         clear interdivTime
         
         
-        % 9. isolate volume, interdiv time and dV/dt data
+        % 9. isolate volume, interdiv time and other datas
         interdivTime = conditionData_trim(:,8)/60;     % col 8  = curve duration (sec converted to min)
-        volume = conditionData_trim(:,12);             % col 12  = volume (Va)
+        volumes = conditionData_trim(:,12);             % col 12  = volume (Va)
+        timestamps = conditionData_trim(:,2);      % col 2  = timestamp in seconds
+        isDrop = conditionData_trim(:,5);          % col 5  = isDrop, 1 marks a birth event
+        curveFinder = conditionData_trim(:,6);     % col 6  = curve finder (ID of curve in condition)
         
-        dvdt_data = dvdt(conditionData_trim, timescale, date);
-        dVdt = dvdt_data(:,1);
         
+        % 10. calculate mean timestep and dVdt
+        curveIDs = unique(curveFinder);
+        firstFullCurve = curveIDs(2);
+        if length(firstFullCurve) > 1
+            firstFullCurve_timestamps = timestamps(curveFinder == firstFullCurve);
+        else
+            firstFullCurve = curveIDs(3);
+            firstFullCurve_timestamps = timestamps(curveFinder == firstFullCurve);
+        end
+        dt = mean(diff(firstFullCurve_timestamps)); % timestep in seconds
         
-        % 10. identify unique interdivision times (unique cell cycles)
-        unique_interdivs = unique(interdivTime);
+        dV_raw = [NaN; diff(volumes)];
+        dVdt = dV_raw/dt * 3600;                    % final units = cubic um/sec
+        dVdt(isDrop == 1) = NaN;
         
         
         % 11. for each unique cell cycle...
         %           i. store birth and division size
         %          ii. remove NaN values from dV/dt vector
-        growthRate = nan(length(unique_interdivs),1);
-        V_birth = nan(length(unique_interdivs),1);
+        growthRate = nan(length(curveIDs),1);
+        V_birth = nan(length(curveIDs),1);
+        interDivs = nan(length(curveIDs),1);
         
-        for cc = 1:length(unique_interdivs)
+        for cc = 1:length(curveIDs)
             
-            currentVolumes = volume(interdivTime == unique_interdivs(cc));
-            currentGrowthRates = dVdt(interdivTime == unique_interdivs(cc));
+            currentVolumes = volumes(curveFinder == curveIDs(cc));
+            currentGrowthRates = dVdt(curveFinder == curveIDs(cc));
+            currentInterdivs = interdivTime(curveFinder == curveIDs(cc));
 
             V_birth(cc,1) = currentVolumes(1);
             growthRate(cc,1) = nanmean(currentGrowthRates);
+            interDivs(cc,1) = currentInterdivs(1);
             
         end
         
@@ -143,11 +159,11 @@ for e = 1:experimentCount
         
         V_birth_means = mean(V_birth);
         growthRate_means = mean(growthRate);
-        interdiv_means = mean(unique_interdivs);
+        interdiv_means = mean(interDivs);
         
         V_birth_stds = std(V_birth);
         growthRate_stds = std(growthRate);
-        interdiv_stds = std(unique_interdivs);
+        interdiv_stds = std(interDivs);
    
         
         % (i) birth size vs. dVdt
