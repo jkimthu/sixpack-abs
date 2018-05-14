@@ -7,10 +7,10 @@
 %  Strategy:
 
 
-%  Last edit: jen, 2018 May 10
+%  Last edit: jen, 2018 May 11
 
-%  commit: plot instantaneous dV/dt vs absolute time across timescales,
-%          except 30 sec period
+%  commit: edit to remove artificial creation of extreme dV/dts, by moving
+%          3hr trim AFTER dV/dt calculation
 
 
 % OK let's go!
@@ -31,6 +31,7 @@ dataIndex = find(~cellfun(@isempty,storedMetaData));
 timePerBin = 25; % sec
 ec = 0; % experiment counter
 exptsToInclude = [6,7,10:14];
+
 %%
 for i = 1:length(exptsToInclude)
     
@@ -75,30 +76,14 @@ for i = 1:length(exptsToInclude)
     clear curveFinder
     
     
-    % 7. isolate data to stabilized regions of growth
-    minTime = 3;  % hr
-    maxTime = bubbletime(condition);
-    timestamps = conditionData_fullOnly(:,2)/3600; % time in seconds converted to hours
-    
-    times_trim1 = timestamps(timestamps >= minTime);
-    conditionData_trim1 = conditionData_fullOnly(timestamps >= minTime,:);
-    
-    if maxTime > 0
-        conditionData_trim2 = conditionData_trim1(times_trim1 <= maxTime,:);
-    else
-        conditionData_trim2 = conditionData_trim1;
-    end
-    clear times_trim1 timestamps minTime maxTime bubbletime
-    
-    
-    % 8. isolate volume (Va) and timestamp data
-    volumes = conditionData_trim2(:,12);        % col 12 = calculated va_vals (cubic um)
-    timestamps = conditionData_trim2(:,2);      % col 2  = timestamp in seconds
-    isDrop = conditionData_trim2(:,5);          % col 5  = isDrop, 1 marks a birth event
-    curveFinder = conditionData_trim2(:,6);     % col 6  = curve finder (ID of curve in condition)
+    % 7. isolate volume (Va) and timestamp data
+    volumes = conditionData_fullOnly(:,12);        % col 12 = calculated va_vals (cubic um)
+    timestamps = conditionData_fullOnly(:,2);      % col 2  = timestamp in seconds
+    isDrop = conditionData_fullOnly(:,5);          % col 5  = isDrop, 1 marks a birth event
+    curveFinder = conditionData_fullOnly(:,6);     % col 6  = curve finder (ID of curve in condition)
     
  
-    % 9. calculate mean timestep and dVdt    
+    % 8. calculate mean timestep and dVdt    
     curveIDs = unique(curveFinder);
     firstFullCurve = curveIDs(2);
     if length(firstFullCurve) > 1
@@ -116,7 +101,25 @@ for i = 1:length(exptsToInclude)
 
     
     
-    % 9. isolate corrected timestamp
+    % 9. isolate data to stabilized regions of growth
+    minTime = 3;  % hr
+    maxTime = bubbletime(condition);
+    
+    times_trim1 = timestamps(timestamps >= minTime);
+    conditionData_trim1 = conditionData_fullOnly(timestamps >= minTime,:);
+    dVdt_trim1 = dVdt(timestamps >= minTime,:);
+    
+    if maxTime > 0
+        conditionData_trim2 = conditionData_trim1(times_trim1 <= maxTime,:);
+        dVdt_trim2 = dVdt_trim1(times_trim1 <= maxTime,:);
+    else
+        conditionData_trim2 = conditionData_trim1;
+        dVdt_trim2 = dVdt_trim1;
+    end
+    clear times_trim1 timestamps minTime maxTime bubbletime
+    
+    
+     % 10. isolate corrected timestamp
     if strcmp(date, '2017-10-10') == 1
         correctedTime = conditionData_trim2(:,2);
     else
@@ -126,7 +129,8 @@ for i = 1:length(exptsToInclude)
     clear isDrop timestamps dV_raw firstFullCurve firstFullCurve_timestamps
     
     
-    % 10. compute nutrient signal, where 1 = high and 0 = low
+    
+    % 11. compute nutrient signal, where 1 = high and 0 = low
     %       (i) translate timestamps into quarters of nutrient signal
     timeInPeriods = correctedTime/timescale; % unit = sec/sec
     timeInPeriodFraction = timeInPeriods - floor(timeInPeriods);
@@ -174,9 +178,9 @@ for i = 1:length(exptsToInclude)
     
     
     % 12. remove data associated with NaN (these are in dVdt as birth events)
-    growthData = [curveFinder timeInPeriodFraction_inBins volumes dVdt];
-    growthData_nans = growthData(isnan(dVdt),:);
-    growthData_none = growthData(~isnan(dVdt),:);
+    growthData = [curveFinder timeInPeriodFraction_inBins volumes dVdt_trim2];
+    growthData_nans = growthData(isnan(dVdt_trim2),:);
+    growthData_none = growthData(~isnan(dVdt_trim2),:);
     
     % 13. collect volume and dV/dt data into bins and calculate stats
     binned_volumes_mean = accumarray(growthData_none(:,2),growthData_none(:,3),[],@mean);
