@@ -18,8 +18,8 @@
 
 
 
-%  Last edit: jen, 2018 May 1
-%  Commit: population-averaged dV/dt (per cell cycle) vs birth size
+%  Last edit: jen, 2018 May 14
+%  Commit: replace dvdt function with in-script calculation
 
 
 %  OK let's go!
@@ -94,26 +94,38 @@ for e = 1:experimentCount
         clear interdivTime
         
         
-        % 8. isolate volume, interdiv time and dV/dt data
+        % 8. isolate volume, interdiv time and other datas
         interdivTime = conditionData_trim(:,8)/60;     % col 8  = curve duration (sec converted to min)
-        volume = conditionData_trim(:,12);             % col 12  = volume (Va)
-        
-        dvdt_data = dvdt(conditionData_trim, timescale, date);
-        dVdt = dvdt_data(:,1);
-        
-        
-        % 9. identify unique interdivision times (unique cell cycles)
-        unique_interdivs = unique(interdivTime);
+        volumes = conditionData_trim(:,12);             % col 12  = volume (Va)
+        timestamps = conditionData_trim(:,2);      % col 2  = timestamp in seconds
+        isDrop = conditionData_trim(:,5);          % col 5  = isDrop, 1 marks a birth event
+        curveFinder = conditionData_trim(:,6);     % col 6  = curve finder (ID of curve in condition)
         
         
+        % 9. calculate mean timestep and dVdt
+        curveIDs = unique(curveFinder);
+        firstFullCurve = curveIDs(2);
+        if length(firstFullCurve) > 1
+            firstFullCurve_timestamps = timestamps(curveFinder == firstFullCurve);
+        else
+            firstFullCurve = curveIDs(3);
+            firstFullCurve_timestamps = timestamps(curveFinder == firstFullCurve);
+        end
+        dt = mean(diff(firstFullCurve_timestamps)); % timestep in seconds
+        
+        dV_raw = [NaN; diff(volumes)];
+        dVdt = dV_raw/dt * 3600;                    % final units = cubic um/sec
+        dVdt(isDrop == 1) = NaN;
+        
+     
         % 10. for each unique cell cycle, calculate C+D period (min)
-        growthRate = nan(length(unique_interdivs),1);
-        V_birth = nan(length(unique_interdivs),1);
+        growthRate = nan(length(curveIDs),1);
+        V_birth = nan(length(curveIDs),1);
         
-        for cc = 1:length(unique_interdivs)
+        for cc = 1:length(curveIDs)
             
-            currentVolumes = volume(interdivTime == unique_interdivs(cc));
-            currentGrowthRates = dVdt(interdivTime == unique_interdivs(cc));
+            currentVolumes = volumes(curveFinder == curveIDs(cc));
+            currentGrowthRates = dVdt(curveFinder == curveIDs(cc));
 
             V_birth(cc,1) = currentVolumes(1);
             growthRate(cc,1) = nanmean(currentGrowthRates);
@@ -149,7 +161,7 @@ for e = 1:experimentCount
         xlabel('birth size (cubic um)')
         ylabel('dV/dt (cubic um/hr)')
         title('population averages from all experiments')
-        axis([0 6 0 25])
+        axis([1 6.5 0 23])
         
         
     end
