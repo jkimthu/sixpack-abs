@@ -1,4 +1,4 @@
-% physioResponse_dvdt
+% figure 23
 
 %  Goal: determine how similar or different physiologies are between
 %        fluctuating timescales by measuring plasticity in growth rate, as
