@@ -19,8 +19,8 @@
 
 
 
-%  Last edit: Jen Nguyen, 2018 May 9
-%  Commit: test, omit 2018-01-12 and 2018-01-13 from analysis. 
+%  Last edit: Jen Nguyen, 2018 May 15
+%  Commit: omit 2018-01-12 and 2018-01-13 from analysis, don't plot high and low 
 
 
 
@@ -207,17 +207,17 @@ hold on
 plot(6, G_jensens,'o','Color',rgb('SlateGray'),'MarkerSize',10,'LineWidth',2)
 hold on
 
-plot(0, stableRates_mean(low),'o','Color',rgb('SlateGray'),'MarkerSize',8,'LineWidth',1)
-hold on 
-errorbar(0,stableRates_mean(low),stableRates_std(low),'Color',rgb('SlateGray'),'LineWidth',1);
-hold on
+% plot(0, stableRates_mean(low),'o','Color',rgb('SlateGray'),'MarkerSize',8,'LineWidth',1)
+% hold on 
+% errorbar(0,stableRates_mean(low),stableRates_std(low),'Color',rgb('SlateGray'),'LineWidth',1);
+% hold on
+% 
+% plot(5, stableRates_mean(high),'o','Color',rgb('SlateGray'),'MarkerSize',8,'LineWidth',1)
+% hold on 
+% errorbar(5,stableRates_mean(high),stableRates_std(high),'Color',rgb('SlateGray'),'LineWidth',1);
+% hold on
 
-plot(5, stableRates_mean(high),'o','Color',rgb('SlateGray'),'MarkerSize',8,'LineWidth',1)
-hold on 
-errorbar(5,stableRates_mean(high),stableRates_std(high),'Color',rgb('SlateGray'),'LineWidth',1);
-hold on
-
-axis([-1 6 0 18])
+axis([-1 6 0 12])
 title('growth expectations')
 xlabel('fluctuating timescale')
 ylabel('mean dV/dt (cubic um/hr)')
@@ -235,17 +235,17 @@ errorbar(-1,G_monod/G_jensens,stableRates_std(ave)./G_jensens,'Color',rgb('Slate
 hold on
 plot(6, G_jensens/G_jensens,'o','Color',rgb('SlateGray'),'MarkerSize',10,'LineWidth',2)
 
-plot(0, stableRates_mean(low)/G_jensens,'o','Color',rgb('SlateGray'),'MarkerSize',8,'LineWidth',1)
-hold on 
-errorbar(0,stableRates_mean(low)/G_jensens,stableRates_std(low)/G_jensens,'Color',rgb('SlateGray'),'LineWidth',1);
-hold on
+% plot(0, stableRates_mean(low)/G_jensens,'o','Color',rgb('SlateGray'),'MarkerSize',8,'LineWidth',1)
+% hold on 
+% errorbar(0,stableRates_mean(low)/G_jensens,stableRates_std(low)/G_jensens,'Color',rgb('SlateGray'),'LineWidth',1);
+% hold on
+% 
+% plot(5, stableRates_mean(high)/G_jensens,'o','Color',rgb('SlateGray'),'MarkerSize',9,'LineWidth',1)
+% hold on 
+% errorbar(5,stableRates_mean(high)/G_jensens,stableRates_std(high)/G_jensens,'Color',rgb('SlateGray'),'LineWidth',1);
+% hold on
 
-plot(5, stableRates_mean(high)/G_jensens,'o','Color',rgb('SlateGray'),'MarkerSize',9,'LineWidth',1)
-hold on 
-errorbar(5,stableRates_mean(high)/G_jensens,stableRates_std(high)/G_jensens,'Color',rgb('SlateGray'),'LineWidth',1);
-hold on
-
-axis([-1 6 0 2])
+axis([-1 6 0 1.2])
 title('growth, relative to Jensens expectations')
 xlabel('fluctuating timescale')
 ylabel('mean dV/dt, normalized to G_jensens')
