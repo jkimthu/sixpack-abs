@@ -7,10 +7,10 @@
 %  Strategy:
 
 
-%  Last edit: jen, 2018 May 11
+%  Last edit: jen, 2018 May 16
 
-%  commit: edit to remove artificial creation of extreme dV/dts, by moving
-%          3hr trim AFTER dV/dt calculation
+%  commit: plot a version without error bars to more easily interpret
+%          differences between replicates and timescales
 
 
 % OK let's go!
@@ -216,23 +216,29 @@ for i = 1:length(exptsToInclude)
     % overlay of all experiments, dV/dt and sem
     figure(1)
     subplot(2,1,1) % upshift
-    errorbar((preShift_bins*-1:0)*timePerBin,binned_dVdt_mean(pre_upshiftBins),binned_dVdt_sems(pre_upshiftBins),'Color',color_low,'Marker',shapes{ec})
+    %errorbar((preShift_bins*-1:0)*timePerBin,binned_dVdt_mean(pre_upshiftBins),binned_dVdt_sems(pre_upshiftBins),'Color',color_low,'Marker',shapes{ec})
+    %hold on
+    %errorbar((1:length(binned_dVdt_mean(upshiftBins)))*timePerBin,binned_dVdt_mean(upshiftBins),binned_dVdt_sems(upshiftBins),'Color',color_high,'Marker',shapes{ec})
+    plot((preShift_bins*-1:0)*timePerBin,binned_dVdt_mean(pre_upshiftBins),'Color',color_low,'LineWidth',1)
     hold on
-    errorbar((1:length(binned_dVdt_mean(upshiftBins)))*timePerBin,binned_dVdt_mean(upshiftBins),binned_dVdt_sems(upshiftBins),'Color',color_high,'Marker',shapes{ec})
+    plot((1:length(binned_dVdt_mean(upshiftBins)))*timePerBin,binned_dVdt_mean(upshiftBins),'Color',color_high,'LineWidth',1)
     grid on
     hold on
-    title(strcat('upshift: mean dV/dt and s.e.m. binned every (',num2str(timePerBin),') sec'))
+    title(strcat('upshift: mean dV/dt, binned every (',num2str(timePerBin),') sec'))
     xlabel('time (sec)')
     ylabel('dV/dt, unsynchronized')
     axis([preShift_bins*-1*timePerBin,1800,-10,25])
     
     subplot(2,1,2) % downshift
-    errorbar((preShift_bins*-1:0)*timePerBin,binned_dVdt_mean(pre_downshiftBins),binned_dVdt_sems(pre_downshiftBins),'Color',color_high,'Marker',shapes{ec})
+    %errorbar((preShift_bins*-1:0)*timePerBin,binned_dVdt_mean(pre_downshiftBins),binned_dVdt_sems(pre_downshiftBins),'Color',color_high,'Marker',shapes{ec})
+    %hold on
+    %errorbar((1:length(binned_dVdt_mean(downshiftBins)))*timePerBin,binned_dVdt_mean(downshiftBins),binned_dVdt_sems(downshiftBins),'Color',color_low,'Marker',shapes{ec})
+    plot((preShift_bins*-1:0)*timePerBin,binned_dVdt_mean(pre_downshiftBins),'Color',color_high,'LineWidth',1)
     hold on
-    errorbar((1:length(binned_dVdt_mean(downshiftBins)))*timePerBin,binned_dVdt_mean(downshiftBins),binned_dVdt_sems(downshiftBins),'Color',color_low,'Marker',shapes{ec})
+    plot((1:length(binned_dVdt_mean(downshiftBins)))*timePerBin,binned_dVdt_mean(downshiftBins),'Color',color_low,'LineWidth',1)
     grid on
     hold on
-    title(strcat('downshift: mean dV/dt and s.e.m. binned every (',num2str(timePerBin),') sec'))
+    title(strcat('downshift: mean dV/dt, binned every (',num2str(timePerBin),') sec'))
     xlabel('time (sec)')
     ylabel('dV/dt, unsynchronized')
     axis([preShift_bins*-1*timePerBin,1800,-10,25])
@@ -241,9 +247,12 @@ for i = 1:length(exptsToInclude)
     % upshift subplots separating timescale, dV/dt and sem
     figure(2)
     subplot(3,1,sp) % upshift
-    errorbar((preShift_bins*-1:0)*timePerBin,binned_dVdt_mean(pre_upshiftBins),binned_dVdt_sems(pre_upshiftBins),'Color',color_low,'Marker',shapes{ec})
+    %errorbar((preShift_bins*-1:0)*timePerBin,binned_dVdt_mean(pre_upshiftBins),binned_dVdt_sems(pre_upshiftBins),'Color',color_low,'Marker',shapes{ec})
+    %hold on
+    %errorbar((1:length(binned_dVdt_mean(upshiftBins)))*timePerBin,binned_dVdt_mean(upshiftBins),binned_dVdt_sems(upshiftBins),'Color',color_high,'Marker',shapes{ec})
+    plot((preShift_bins*-1:0)*timePerBin,binned_dVdt_mean(pre_upshiftBins),'Color',color_low,'LineWidth',1)
     hold on
-    errorbar((1:length(binned_dVdt_mean(upshiftBins)))*timePerBin,binned_dVdt_mean(upshiftBins),binned_dVdt_sems(upshiftBins),'Color',color_high,'Marker',shapes{ec})
+    plot((1:length(binned_dVdt_mean(upshiftBins)))*timePerBin,binned_dVdt_mean(upshiftBins),'Color',color_high,'LineWidth',1)
     grid on
     hold on
     title(strcat(num2str(timescale),': upshift, mean dV/dt and s.e.m.'))
@@ -255,9 +264,12 @@ for i = 1:length(exptsToInclude)
     % downshift subplots separating timescale, dV/dt and sem
     figure(3)
     subplot(3,1,sp) % downshift
-    errorbar((preShift_bins*-1:0)*timePerBin,binned_dVdt_mean(pre_downshiftBins),binned_dVdt_sems(pre_downshiftBins),'Color',color_high,'Marker',shapes{ec})
+    %errorbar((preShift_bins*-1:0)*timePerBin,binned_dVdt_mean(pre_downshiftBins),binned_dVdt_sems(pre_downshiftBins),'Color',color_high,'Marker',shapes{ec})
+    %hold on
+    %errorbar((1:length(binned_dVdt_mean(downshiftBins)))*timePerBin,binned_dVdt_mean(downshiftBins),binned_dVdt_sems(downshiftBins),'Color',color_low,'Marker',shapes{ec})
+    plot((preShift_bins*-1:0)*timePerBin,binned_dVdt_mean(pre_downshiftBins),'Color',color_high,'LineWidth',1)
     hold on
-    errorbar((1:length(binned_dVdt_mean(downshiftBins)))*timePerBin,binned_dVdt_mean(downshiftBins),binned_dVdt_sems(downshiftBins),'Color',color_low,'Marker',shapes{ec})
+    plot((1:length(binned_dVdt_mean(downshiftBins)))*timePerBin,binned_dVdt_mean(downshiftBins),'Color',color_low,'LineWidth',1)
     grid on
     hold on
     title(strcat(num2str(timescale),': downshift, mean dV/dt and s.e.m.'))
