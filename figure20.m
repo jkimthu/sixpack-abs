@@ -17,8 +17,9 @@
 %       5. call data from structures for plotting
 
 
-% Last edit: jen, 2018 May 6
-% Commit: edit dt calculation, as done in figure21
+% Last edit: jen, 2018 May 15
+% Commit: bump 3hr trim BELOW dV/dt calculation, only plots dV/dt not
+%         normalized version by initial volume.
 
 % OK let's go!
 
@@ -83,20 +84,10 @@ for e = 1:experimentCount
         conditionData = exptData(exptData(:,23) == c,:);
         
         
-        % 4. isolate data to stabilized regions of growth
-        minTime = 3;  % hr
-        maxTime = storedMetaData{index}.bubbletime(c);
-        timestamps = conditionData(:,2)/3600; % time in seconds converted to hours
-        
-        times_trim1 = timestamps(timestamps >= minTime);
-        conditionData_trim1 = conditionData(timestamps >= minTime,:);
-        
-        if maxTime > 0
-            conditionData_trim2 = conditionData_trim1(times_trim1 <= maxTime,:);
-        else
-            conditionData_trim2 = conditionData_trim1;
-        end
-
+        % 4. isolate condition data to those with full cell cycles
+        curveIDs = conditionData(:,6);           % col 6 = curve ID
+        conditionData_fullOnly = conditionData(curveIDs > 0,:);
+        clear curveIDs
         
         % 5. isolate volume (Va), dVdt and timestamp data from current condition
         volumes = conditionData_trim2(:,12);        % col 12 = calculated va_vals (cubic um)
@@ -104,36 +95,46 @@ for e = 1:experimentCount
         isDrop = conditionData_trim2(:,5);          % col 5  = isDrop, 1 marks a birth event 
         curveFinder = conditionData_trim2(:,6);     % col 6  = curve finder (ID of curve in condition)
         
-        % calculate mean timestep
-        if isempty(volumes)
-            dVdt = [];
-            dVdt_normalizedByVol = [];
-        else
-            curveIDs = unique(curveFinder);
-            firstFullCurve = curveIDs(2);
+        
+        % 6. calculate mean timestep and dV/dt
+        curveIDs = unique(curveFinder);
+        firstFullCurve = curveIDs(2);
+        if length(firstFullCurve) > 1
             firstFullCurve_timestamps = timestamps(curveFinder == firstFullCurve);
-            dt = mean(diff(firstFullCurve_timestamps)); % timestep in seconds
-            
-            dV_raw = [NaN; diff(volumes)];
-            dVdt = dV_raw/dt;
-            dVdt_normalizedByVol = dVdt./volumes;
-            
-            dVdt(isDrop == 1) = NaN;
-            dVdt_normalizedByVol(isDrop == 1) = NaN;
-            %clear conditionData
+        else
+            firstFullCurve = curveIDs(3);
+            firstFullCurve_timestamps = timestamps(curveFinder == firstFullCurve);
         end
+        dt = mean(diff(firstFullCurve_timestamps)); % timestep in seconds
+        
+        dV_raw = [NaN; diff(volumes)];
+        dVdt = dV_raw/dt * 3600;                    % final units = cubic um/sec
+        dVdt(isDrop == 1) = NaN;
+
+        
+        % 7. isolate data to stabilized regions of growth
+        minTime = 3;  % hr
+        maxTime = bubbletime(condition);
+        
+        times_trim1 = timestamps(timestamps >= minTime);
+        conditionData_trim1 = conditionData_fullOnly(timestamps >= minTime,:);
+        dVdt_trim1 = dVdt(timestamps >= minTime,:);
+        
+        if maxTime > 0
+            conditionData_fullOnly = conditionData_trim1(times_trim1 <= maxTime,:);
+            dVdt_trim2 = dVdt_trim1(times_trim1 <= maxTime,:);
+        else
+            conditionData_fullOnly = conditionData_trim1;
+            dVdt_trim2 = dVdt_trim1;
+        end
+        clear times_trim1 dVdt_trim1 timestamps minTime maxTime
         
         
-        % 6. calculate average and s.e.m. of stabilized data        
-        mean_dVdt = nanmean(dVdt);
-        count_dVdt = length(dVdt(~isnan(dVdt)));
-        std_dVdt = nanstd(dVdt);
+        % 8. calculate average and s.e.m. of stabilized data        
+        mean_dVdt = nanmean(dVdt_trim2);
+        count_dVdt = length(dVdt_trim2(~isnan(dVdt_trim2)));
+        std_dVdt = nanstd(dVdt_trim2);
         sem_dVdt = std_dVdt./sqrt(count_dVdt);
-        
-        mean_dVdt_normalized = nanmean(dVdt_normalizedByVol);
-        count_dVdt_normalized = length(dVdt_normalizedByVol(~isnan(dVdt_normalizedByVol)));
-        std_dVdt_normalized = nanstd(dVdt_normalizedByVol);
-        sem_dVdt_normalized = std_dVdt_normalized./sqrt(count_dVdt_normalized);
         
         
         % 9. accumulate data for storage / plotting        
@@ -142,19 +143,14 @@ for e = 1:experimentCount
         compiled_dVdt{c}.count = count_dVdt;
         compiled_dVdt{c}.sem = sem_dVdt;
         
-        compiled_dVdt_normalized{c}.mean = mean_dVdt_normalized;
-        compiled_dVdt_normalized{c}.std = std_dVdt_normalized;
-        compiled_dVdt_normalized{c}.count = count_dVdt_normalized;
-        compiled_dVdt_normalized{c}.sem = sem_dVdt_normalized;
-        
         clear minTime maxTime 
         clear mean_dVdt std_dVdt count_dVdt sem_dVdt
     
     end
     
     % 10. store data from all conditions into measured data structure        
-    dVdtData_newdVdt{index} = compiled_dVdt;
-    dVdtData_normalized_newdVdt{index} = compiled_dVdt_normalized;
+    dVdtData_newdVdt_fullONLY{index} = compiled_dVdt;
+
     
     clear compiled_dVdt
 end
