@@ -19,9 +19,10 @@
 
 
 
-%  Last edit: jen, 2018 May 2
-%  Commit: added volume vs (A) birth vol, (B) time of birth, and (C) time
-%  of division. population-averaged data from all experiments.
+%  Last edit: jen, 2018 May 15
+%  Commit: population averaged added volume vs birth vol across
+%          experiments, considering only data after 3 hrs instead of total
+
 
 
 %  OK let's go!
@@ -47,7 +48,7 @@ for e = 1:experimentCount
     index = dataIndex(e);
     date = storedMetaData{index}.date;
     timescale = storedMetaData{index}.timescale;
-    %bubbletime = storedMetaData{index}.bubbletime;
+    bubbletime = storedMetaData{index}.bubbletime;
     
     % exclude outliers from analysis (2017-10-31 and monod experiments)
     if strcmp(date, '2017-10-31') == 1 || strcmp (timescale, 'monod') == 1
@@ -89,24 +90,41 @@ for e = 1:experimentCount
         conditionData_fullOnly = conditionData(~isnan(ccFraction),:);
         
         
+        % 7. isolate data to stabilized regions of growth
+        minTime = 3;  % hr
+        maxTime = bubbletime(condition);
+        timestamp = conditionData_fullOnly(:,2)/3600; % col 2   = raw time
+        
+        times_trim1 = timestamp(timestamp >= minTime);
+        conditionData_trim1 = conditionData_fullOnly(timestamp >= minTime,:);
+        
+        if maxTime > 0
+            conditionData_trim2 = conditionData_trim1(times_trim1 <= maxTime,:);
+        else
+            conditionData_trim2 = conditionData_trim1;
+        end
+        clear times_trim1 timestamp minTime maxTime
+        
+        
         % 7. isolate corrected time, added mass, volume, and birth event data (drop)
-        curveFinder = conditionData_fullOnly(:,6);           % col 6   = curve Finder
-        addedVol = conditionData_fullOnly(:,15);             % col 15  = added vol (calculated from Va)
-        volume = conditionData_fullOnly(:,12);               % col 12  = volume (Va)
-        isBirth = conditionData_fullOnly(:,5);               % col 5   = isDrop (1 = birth event, 0 = not)
-        timestamp = conditionData_fullOnly(:,2)/3600;        % col 2   = corrected time
+        curveFinder = conditionData_trim2(:,6);           % col 6   = curve Finder
+        addedVol = conditionData_trim2(:,15);             % col 15  = added vol (calculated from Va)
+        volume = conditionData_trim2(:,12);               % col 12  = volume (Va)
+        timestamps = conditionData_trim2(:,2)/3600;        % col 2   = raw time
         
         
         % 8. for each unique cell cycle, collect V_birth and time
-        V_added = addedVol(isBirth == 1);
-        V_birth = volume(isBirth == 1);
-        
         unique_cycles = unique(curveFinder);
         for cc = 1:length(unique_cycles)
             
-            currentTimes = timestamp(curveFinder == unique_cycles(cc));
+            currentTimes = timestamps(curveFinder == unique_cycles(cc));
             timestamps_division(cc,1) = currentTimes(end);
             timestamps_birth(cc,1) = currentTimes(1);
+            
+            currentVolumes = volume(curveFinder == unique_cycles(cc));
+            V_birth(cc,1) = currentVolumes(1);
+            V_added(cc,1) = currentVolumes(end) - currentVolumes(1);
+            
             
         end
         
