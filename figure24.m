@@ -7,9 +7,9 @@
 %  Strategy:
 
 
-%  Last edit: jen, 2018 May 10
+%  Last edit: jen, 2018 May 18
 
-%  commit: violin plots of dV/dt per bin in figure 23
+%  commit: violin plots with dV/dt calculation performed BEFORE 3hr trim
 
 
 
@@ -73,33 +73,17 @@ for i = 1:length(exptsToInclude)
     % 6. isolate condition data to those with full cell cycles
     curveIDs = conditionData(:,6);           % col 6 = curve ID
     conditionData_fullOnly = conditionData(curveIDs > 0,:);
-    clear curveFinder
+    clear curveIDs
     
     
-    % 7. isolate data to stabilized regions of growth
-    minTime = 3;  % hr
-    maxTime = bubbletime(condition);
-    timestamps = conditionData_fullOnly(:,2)/3600; % time in seconds converted to hours
-    
-    times_trim1 = timestamps(timestamps >= minTime);
-    conditionData_trim1 = conditionData_fullOnly(timestamps >= minTime,:);
-    
-    if maxTime > 0
-        conditionData_trim2 = conditionData_trim1(times_trim1 <= maxTime,:);
-    else
-        conditionData_trim2 = conditionData_trim1;
-    end
-    clear times_trim1 timestamps minTime maxTime bubbletime
-    
-    
-    % 8. isolate volume (Va) and timestamp data
-    volumes = conditionData_trim2(:,12);        % col 12 = calculated va_vals (cubic um)
-    timestamps = conditionData_trim2(:,2);      % col 2  = timestamp in seconds
-    isDrop = conditionData_trim2(:,5);          % col 5  = isDrop, 1 marks a birth event
-    curveFinder = conditionData_trim2(:,6);     % col 6  = curve finder (ID of curve in condition)
+    % 7. isolate volume (Va) and timestamp data
+    volumes = conditionData_fullOnly(:,12);        % col 12 = calculated va_vals (cubic um)
+    timestamps = conditionData_fullOnly(:,2);      % col 2  = timestamp in seconds
+    isDrop = conditionData_fullOnly(:,5);          % col 5  = isDrop, 1 marks a birth event
+    curveFinder = conditionData_fullOnly(:,6);     % col 6  = curve finder (ID of curve in condition)
     
  
-    % 9. calculate mean timestep and dVdt    
+    % 8. calculate mean timestep and dVdt    
     curveIDs = unique(curveFinder);
     firstFullCurve = curveIDs(2);
     if length(firstFullCurve) > 1
@@ -112,103 +96,73 @@ for i = 1:length(exptsToInclude)
     
     dV_raw = [NaN; diff(volumes)];
     dVdt = dV_raw/dt * 3600;                    % final units = cubic um/sec
-    
     dVdt(isDrop == 1) = NaN;
+    
+    clear curveFinder isDrop volumes
 
     
+    % 9. isolate data to stabilized regions of growth
+    minTime = 3;  % hr
+    maxTime = bubbletime(condition);
+
+    times_trim1 = timestamps(timestamps >= minTime);
+    conditionData_trim1 = conditionData_fullOnly(timestamps >= minTime,:);
+    dVdt_trim1 = dVdt(timestamps >= minTime,:);
     
-    % 9. isolate corrected timestamp
-    if strcmp(date, '2017-10-10') == 1
-        correctedTime = conditionData_trim2(:,2);
+    if maxTime > 0
+        conditionData_fullOnly = conditionData_trim1(times_trim1 <= maxTime,:);
+        dVdt_trim2 = dVdt_trim1(times_trim1 <= maxTime,:);
     else
-        correctedTime = conditionData_trim2(:,25); % col 25 = timestamps corrected for signal lag
+        conditionData_fullOnly = conditionData_trim1;
+        dVdt_trim2 = dVdt_trim1;
+    end
+    clear times_trim1 dVdt_trim1 timestamps minTime maxTime 
+    
+    
+    % 10. isolate corrected timestamp
+    if strcmp(date, '2017-10-10') == 1
+        correctedTime = conditionData_fullOnly(:,2);
+    else
+        correctedTime = conditionData_fullOnly(:,25); % col 25 = timestamps corrected for signal lag
     end
     clear D5 M M_va T xy_start xy_end xys
     clear isDrop timestamps dV_raw firstFullCurve firstFullCurve_timestamps
     
     
     % 10. compute nutrient signal, where 1 = high and 0 = low
-    %       (i) translate timestamps into quarters of nutrient signal
     timeInPeriods = correctedTime/timescale; % unit = sec/sec
     timeInPeriodFraction = timeInPeriods - floor(timeInPeriods);
-    timeInQuarters = ceil(timeInPeriodFraction * 4);
-    
-    %      (ii) from nutrient signal quarters, generate a binary nutrient signal where, 1 = high and 0 = low
-    binaryNutrientSignal = zeros(length(timeInQuarters),1);
-    binaryNutrientSignal(timeInQuarters == 1) = 1;
-    binaryNutrientSignal(timeInQuarters == 4) = 1;
-    
-    
+
     % 11. assign corrected timestamps to bins, by which to accumulate volume and dV/dt data
     timeInPeriodFraction_inSeconds = timeInPeriodFraction * timescale;
     timeInPeriodFraction_inBins = ceil(timeInPeriodFraction_inSeconds/timePerBin);
-    
-    
-    firstBinAfter_downshift = (timescale/4)/timePerBin + 1;
-    lastBin_downshift = (timescale*3/4)/timePerBin;
-    firstBinAfter_upshift = (timescale*3/4)/timePerBin + 1;
-    lastBin_ofPeriod = timescale/timePerBin;
-    lastBin_Q1 = (timescale/timePerBin)/4;
-    
-    downshiftBins = firstBinAfter_downshift:lastBin_downshift;
-    upshiftBins = [firstBinAfter_upshift:lastBin_ofPeriod, 1:lastBin_Q1];
-    
-    % determine how many bins of pre-shift data to plot
-    if length(upshiftBins) >= 5
-        preShift_bins = 4;
-    else
-        preShift_bins = 2;
-    end
-    
-    % shorter timescales (less bins) require pulling from Q4 growth data,
-    % in order to have 5 pre-shift points
-    if lastBin_Q1 - preShift_bins <= 0
-        first_preshift = lastBin_Q1 - preShift_bins + lastBin_ofPeriod;
-        pre_downshiftBins = [first_preshift,lastBin_ofPeriod,1:lastBin_Q1];
-    else
-        % otherwise no need to tap into Q4 data
-        pre_downshiftBins = lastBin_Q1 - preShift_bins : lastBin_Q1;
-    end
-    
-    pre_upshiftBins = lastBin_downshift - preShift_bins : lastBin_downshift;
-    
-    
+
     
     % 12. remove data associated with NaN (these are in dVdt as birth events)
-    growthData = [curveFinder timeInPeriodFraction_inBins volumes dVdt];
-    growthData_nans = growthData(isnan(dVdt),:);
-    growthData_none = growthData(~isnan(dVdt),:);
+    growthData = [timeInPeriodFraction_inBins dVdt_trim2];
+    growthData_nans = growthData(isnan(dVdt_trim2),:);
+    growthData_none = growthData(~isnan(dVdt_trim2),:);
     
-    % 13. collect volume and dV/dt data into bins and calculate stats
-    binned_volumes_mean = accumarray(growthData_none(:,2),growthData_none(:,3),[],@mean);
-    binned_volumes_std = accumarray(growthData_none(:,2),growthData_none(:,3),[],@std);
-    binned_volumes_counts = accumarray(growthData_none(:,2),growthData_none(:,3),[],@length);
-    binned_volumes_sems = binned_volumes_std./sqrt(binned_volumes_counts);
-    
-    binned_dVdt = accumarray(growthData_none(:,2),growthData_none(:,4),[],@(x) {x});
-    binned_dVdt_mean = accumarray(growthData_none(:,2),growthData_none(:,4),[],@mean);
-    binned_dVdt_std = accumarray(growthData_none(:,2),growthData_none(:,4),[],@std);
-    binned_dVdt_counts = accumarray(growthData_none(:,2),growthData_none(:,4),[],@length);
-    binned_dVdt_sems = binned_dVdt_std./sqrt(binned_dVdt_counts);
-    
+    % 13. collectdV/dt data into bins
+    binned_dVdt = accumarray(growthData_none(:,1),growthData_none(:,2),[],@(x) {x});
     
     
     % 14. plot
-    shapes = {'o','*','square'};
+%     shapes = {'o','*','square'};
     if timescale == 300
         sp = 1;
-        color_high = rgb('DarkSlateBlue');
-        color_low = rgb('DarkMagenta');
+%         color_high = rgb('DarkSlateBlue');
+%         color_low = rgb('DarkMagenta');
     elseif timescale == 900
         sp = 2;
-        color_high = rgb('Aquamarine');
-        color_low = rgb('Teal');
+%         color_high = rgb('Aquamarine');
+%         color_low = rgb('Teal');
     else
         sp = 3;
-        color_high = rgb('Chocolate');
-        color_low = rgb('DodgerBlue');
+%         color_high = rgb('Chocolate');
+%         color_low = rgb('DodgerBlue');
     end
-    
+%     
     
     % plot violin plots across transition
     figure(sp)
@@ -228,57 +182,6 @@ for i = 1:length(exptsToInclude)
         legend('left: 2018-01-29','right: 2018-01-31')
     end
     
-    
-%     figure(1)
-%     subplot(2,1,1) % upshift
-%     errorbar((preShift_bins*-1:0)*timePerBin,binned_dVdt_mean(pre_upshiftBins),binned_dVdt_sems(pre_upshiftBins),'Color',color_low,'Marker',shapes{ec})
-%     hold on
-%     errorbar((1:length(binned_dVdt_mean(upshiftBins)))*timePerBin,binned_dVdt_mean(upshiftBins),binned_dVdt_sems(upshiftBins),'Color',color_high,'Marker',shapes{ec})
-%     grid on
-%     hold on
-%     title(strcat('upshift: mean dV/dt and s.e.m. binned every (',num2str(timePerBin),') sec'))
-%     xlabel('time (sec)')
-%     ylabel('dV/dt, unsynchronized')
-%     axis([preShift_bins*-1*timePerBin,1800,-10,25])
-%     
-%     subplot(2,1,2) % downshift
-%     errorbar((preShift_bins*-1:0)*timePerBin,binned_dVdt_mean(pre_downshiftBins),binned_dVdt_sems(pre_downshiftBins),'Color',color_high,'Marker',shapes{ec})
-%     hold on
-%     errorbar((1:length(binned_dVdt_mean(downshiftBins)))*timePerBin,binned_dVdt_mean(downshiftBins),binned_dVdt_sems(downshiftBins),'Color',color_low,'Marker',shapes{ec})
-%     grid on
-%     hold on
-%     title(strcat('downshift: mean dV/dt and s.e.m. binned every (',num2str(timePerBin),') sec'))
-%     xlabel('time (sec)')
-%     ylabel('dV/dt, unsynchronized')
-%     axis([preShift_bins*-1*timePerBin,1800,-10,25])
-%     
-%     
-%     % upshift subplots separating timescale, dV/dt and sem
-%     figure(2)
-%     subplot(3,1,sp) % upshift
-%     errorbar((preShift_bins*-1:0)*timePerBin,binned_dVdt_mean(pre_upshiftBins),binned_dVdt_sems(pre_upshiftBins),'Color',color_low,'Marker',shapes{ec})
-%     hold on
-%     errorbar((1:length(binned_dVdt_mean(upshiftBins)))*timePerBin,binned_dVdt_mean(upshiftBins),binned_dVdt_sems(upshiftBins),'Color',color_high,'Marker',shapes{ec})
-%     grid on
-%     hold on
-%     title(strcat(num2str(timescale),': upshift, mean dV/dt and s.e.m.'))
-%     xlabel('time (sec)')
-%     ylabel('dV/dt, unsynchronized')
-%     axis([preShift_bins*-1*timePerBin,1800,-10,25])
-%     
-%     
-%     % downshift subplots separating timescale, dV/dt and sem
-%     figure(3)
-%     subplot(3,1,sp) % downshift
-%     errorbar((preShift_bins*-1:0)*timePerBin,binned_dVdt_mean(pre_downshiftBins),binned_dVdt_sems(pre_downshiftBins),'Color',color_high,'Marker',shapes{ec})
-%     hold on
-%     errorbar((1:length(binned_dVdt_mean(downshiftBins)))*timePerBin,binned_dVdt_mean(downshiftBins),binned_dVdt_sems(downshiftBins),'Color',color_low,'Marker',shapes{ec})
-%     grid on
-%     hold on
-%     title(strcat(num2str(timescale),': downshift, mean dV/dt and s.e.m.'))
-%     xlabel('time (sec)')
-%     ylabel('dV/dt, unsynchronized')
-%     axis([preShift_bins*-1*timePerBin,1800,-10,25])
     
     clearvars -except dVdtData_fullOnly_newdVdt storedMetaData ec timePerBin datesForLegend dataIndex exptsToInclude
     
