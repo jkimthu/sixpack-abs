@@ -4,11 +4,12 @@
 
 %       1. are there nutrient period bins that have a higher frequency of
 %          negatives than others?
+%
+%       2. what is the average value of these negatives?
 
 
 % last update: jen, 2018 May 28
-% commit: plot fraction of negative values in each 25 sec time bin after
-%         nutrient shift
+% commit: plot mean negative value and standard dev after shifts
 
 % OK let's go!
 
@@ -188,6 +189,9 @@ for i = 1:length(exptsToInclude)
     
     
     % 13. collect dV/dt data into bins and calculate stats
+    binned_neg_means = accumarray(growthData_nans(:,2),growthData_nans(:,4),[],@nanmean);
+    binned_neg_stds = accumarray(growthData_nans(:,2),growthData_nans(:,4),[],@nanstd);
+    
     binned_neg_counts = accumarray(growthData_nans(:,2),growthData_nans(:,4),[],@length);
     binned_none_counts = accumarray(growthData_none(:,2),growthData_none(:,4),[],@length);
     binned_total_counts = binned_neg_counts + binned_none_counts;
@@ -236,36 +240,31 @@ for i = 1:length(exptsToInclude)
     axis([preShift_bins*-1*timePerBin,1800,0,1])
     
     
-%     % upshift subplots separating timescale, dV/dt and sem
-%     figure(2)
-%     subplot(3,1,sp) % upshift
-%     plot((preShift_bins*-1:0)*timePerBin,binned_dVdt_mean(pre_upshiftBins),'Color',color_low,'LineWidth',1)
-%     hold on
-%     plot((1:length(binned_dVdt_mean(upshiftBins)))*timePerBin,binned_dVdt_mean(upshiftBins),'Color',color_high,'LineWidth',1)
-%     grid on
-%     hold on
-%     title(strcat(num2str(timescale),': upshift, mean (dV/dt)/V'))
-%     xlabel('time (sec)')
-%     ylabel('(dV/dt)/V, unsynchronized')
-%     axis([preShift_bins*-1*timePerBin,1800,-2,6])
-%     
-%     
-%     % downshift subplots separating timescale, dV/dt and sem
-%     figure(3)
-%     subplot(3,1,sp) % downshift
-%     %errorbar((preShift_bins*-1:0)*timePerBin,binned_dVdt_mean(pre_downshiftBins),binned_dVdt_sems(pre_downshiftBins),'Color',color_high,'Marker',shapes{ec})
-%     %hold on
-%     %errorbar((1:length(binned_dVdt_mean(downshiftBins)))*timePerBin,binned_dVdt_mean(downshiftBins),binned_dVdt_sems(downshiftBins),'Color',color_low,'Marker',shapes{ec})
-%     plot((preShift_bins*-1:0)*timePerBin,binned_dVdt_mean(pre_downshiftBins),'Color',color_high,'LineWidth',1)
-%     hold on
-%     plot((1:length(binned_dVdt_mean(downshiftBins)))*timePerBin,binned_dVdt_mean(downshiftBins),'Color',color_low,'LineWidth',1)
-%     grid on
-%     hold on
-%     title(strcat(num2str(timescale),': downshift, mean (dV/dt)/V'))
-%     xlabel('time (sec)')
-%     ylabel('(dV/dt)/V, unsynchronized')
-%     axis([preShift_bins*-1*timePerBin,1800,-2,6])
-%     
+    % mean negative value across bin
+    figure(2)
+    subplot(2,1,1) % upshift
+    errorbar((preShift_bins*-1:0)*timePerBin,binned_neg_means(pre_upshiftBins),binned_neg_stds(pre_upshiftBins),'Color',color_low,'LineWidth',1,'Marker','.')
+    hold on
+    errorbar((1:length(binned_neg_means(upshiftBins)))*timePerBin,binned_neg_means(upshiftBins),binned_neg_stds(upshiftBins),'Color',color_high,'LineWidth',1,'Marker','.')
+    grid on
+    hold on
+    title(strcat('upshift: mean negative value + std dev, binned every (',num2str(timePerBin),') sec'))
+    xlabel('time (sec)')
+    ylabel('mean dV/dt')
+    axis([preShift_bins*-1*timePerBin,1800,-2,1])
+    
+    subplot(2,1,2) % downshift
+    errorbar((preShift_bins*-1:0)*timePerBin,binned_neg_means(pre_downshiftBins),binned_neg_stds(pre_downshiftBins),'Color',color_high,'LineWidth',1,'Marker','.')
+    hold on
+    errorbar((1:length(binned_neg_means(downshiftBins)))*timePerBin,binned_neg_means(downshiftBins),binned_neg_stds(downshiftBins),'Color',color_low,'LineWidth',1,'Marker','.')
+    grid on
+    hold on
+    title(strcat('downshift: mean negative value + std dev, binned every (',num2str(timePerBin),') sec'))
+    xlabel('time (sec)')
+    ylabel('mean dV/dt')
+    axis([preShift_bins*-1*timePerBin,1800,-2,1])
+    
+ 
     clearvars -except dVdtData_fullOnly_newdVdt storedMetaData ec timePerBin datesForLegend dataIndex exptsToInclude
     
 end
