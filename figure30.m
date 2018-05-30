@@ -8,8 +8,8 @@
 %       2. what is the average value of these negatives?
 
 
-% last update: jen, 2018 May 28
-% commit: plot mean negative value and standard dev after shifts
+% last update: jen, 2018 May 30
+% commit: edit comments to reflect true units
 
 % OK let's go!
 
@@ -94,7 +94,7 @@ for i = 1:length(exptsToInclude)
     
     dV_raw_noNan = diff(volumes);
     dV_norm = [NaN; dV_raw_noNan./volumes(1:end-1)];
-    dVdt_overV = dV_norm/dt * 3600;                    % final units = cubic um/sec
+    dVdt_overV = dV_norm/dt * 3600;                    % final units = 1/hr
     
     dVdt_overV(isDrop == 1) = NaN;
 
