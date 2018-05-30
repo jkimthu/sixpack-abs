@@ -23,10 +23,11 @@
 %       v4. all cell cycles born after FOUR hrs
 %       v5. trim births before 3 hrs, normalize all values by condition mean
 %           birth size
+%       v6. with and without normalization, remove cell cycles with
+%           V_division greater than 3x V_birth
 
-% last update: jen, 2018 May 22
-% commit: attempts to re-produce added size vs birth size plot in Taheri,
-%         Curr bio
+% last update: jen, 2018 May 23
+% commit: narrow axis to only include 0-5 um or cubic microns
 
 
 % OK let's go!
@@ -262,12 +263,12 @@ for eCol = 1:length(environment_order)
 %     
 %     concat_Lbirth = concat_Lbirth(concat_Tbirth > 4);
 %     concat_Ladded = concat_Ladded(concat_Tbirth > 4);
-%     
+    
     
     % 4. remove unphysical events, where added size is negative
     inconceivables_vol = concat_Vadded(concat_Vadded < 0);
     inconceivables_length = concat_Ladded(concat_Ladded < 0);
-    length(inconceivables_length)
+    %length(inconceivables_length)
     
     conceivables_Vbirth = concat_Vbirth(concat_Vadded > 0);
     conceivables_Vadded = concat_Vadded(concat_Vadded > 0);
@@ -276,87 +277,147 @@ for eCol = 1:length(environment_order)
     conceivables_Ladded = concat_Ladded(concat_Ladded > 0);
     
     
+    % 5. remove non-single cell cycles, where division size > 3* birth size
+    division_volume = conceivables_Vbirth + conceivables_Vadded;
+    division_length = conceivables_Lbirth + conceivables_Ladded;
+    
+    vBirth_3x = conceivables_Vbirth * 3;
+    lBirth_3x = conceivables_Lbirth * 3;
+    
+    nonSingles_volume = length(division_volume(division_volume > vBirth_3x))
+    nonSingles_length = length(division_length(division_length > lBirth_3x))
+    
+    singles_Vbirth = conceivables_Vbirth(division_volume <= vBirth_3x);
+    singles_Vadded = conceivables_Vadded(division_volume <= vBirth_3x);
+    
+    singles_Lbirth = conceivables_Lbirth(division_length <= lBirth_3x);
+    singles_Ladded = conceivables_Ladded(division_length <= lBirth_3x);
+    
+    
     
     % 5. normalize all values by mean of birth size
-    mean_Vbirth = mean(conceivables_Vbirth);
-    mean_Lbirth = mean(conceivables_Lbirth);
+    mean_Vbirth = mean(singles_Vbirth);
+    mean_Lbirth = mean(singles_Lbirth);
     
-    normalized_Vbirth = conceivables_Vbirth./mean_Vbirth;
-    normalized_Vadded = conceivables_Vadded./mean_Vbirth;
+    normalized_Vbirth = singles_Vbirth./mean_Vbirth;
+    normalized_Vadded = singles_Vadded./mean_Vbirth;
     
-    normalized_Lbirth = conceivables_Lbirth./mean_Lbirth;
-    normalized_Ladded = conceivables_Ladded./mean_Lbirth;
+    normalized_Lbirth = singles_Lbirth./mean_Lbirth;
+    normalized_Ladded = singles_Ladded./mean_Lbirth;
     
     
     % 6. bin birth volumes by every 0.1 cubic um 
-    %birthBins_vol = floor(conceivables_Vbirth*10);
-    birthBins_vol = floor(normalized_Vbirth*10);
+    birthBins_vol = floor(conceivables_Vbirth*10);
     bins = 1:max(birthBins_vol);
     xbins_vol = bins'/ 10;
     
-    %birthBins_length = floor(conceivables_Lbirth*10);
-    birthBins_length = floor(normalized_Lbirth*10);
+    birthBins_vol_normalized = floor(normalized_Vbirth*10);
+    bins_normalized = 1:max(birthBins_vol_normalized);
+    xbins_vol_normalized = bins_normalized'/ 10;
+    
+    birthBins_length = floor(conceivables_Lbirth*10);
     bins = 1:max(birthBins_length);
     xbins_length = bins'/10;
     
+    birthBins_length_normalized = floor(normalized_Lbirth*10);
+    bins_normalized = 1:max(birthBins_length_normalized);
+    xbins_length_normalized = bins_normalized'/10;
+    
     
     % 7. accumulate added volume by birth bin
-    %binned_addedVols = accumarray(birthBins_vol,conceivables_Vadded,[],@(x) {x});
-    binned_addedVols = accumarray(birthBins_vol,normalized_Vadded,[],@(x) {x});
-    
+    binned_addedVols = accumarray(birthBins_vol,conceivables_Vadded,[],@(x) {x});
     binned_v_means = cellfun(@mean,binned_addedVols);
     binned_v_stds = cellfun(@std,binned_addedVols);
     binned_v_counts = cellfun(@length,binned_addedVols);
     binned_v_sems = binned_v_stds./sqrt(binned_v_counts);
     
-    %binned_addedLengths = accumarray(birthBins_length,conceivables_Ladded,[],@(x) {x});
-    binned_addedLengths = accumarray(birthBins_length,normalized_Ladded,[],@(x) {x});
+    binned_addedVols_normalized = accumarray(birthBins_vol_normalized,normalized_Vadded,[],@(x) {x});
+    binned_v_norm_means = cellfun(@mean,binned_addedVols_normalized);
+    binned_v_norm_stds = cellfun(@std,binned_addedVols_normalized);
+    binned_v_norm_counts = cellfun(@length,binned_addedVols_normalized);
+    binned_v_norm_sems = binned_v_norm_stds./sqrt(binned_v_norm_counts);
+    
+    binned_addedLengths = accumarray(birthBins_length,conceivables_Ladded,[],@(x) {x});
     binned_l_means = cellfun(@mean,binned_addedLengths);
     binned_l_stds = cellfun(@std,binned_addedLengths);
     binned_l_counts = cellfun(@length,binned_addedLengths);
     binned_l_sems = binned_l_stds./sqrt(binned_l_counts);
+    
+    binned_addedLengths_normalized = accumarray(birthBins_length_normalized,normalized_Ladded,[],@(x) {x});
+    binned_l_norm_means = cellfun(@mean,binned_addedLengths_normalized);
+    binned_l_norm_stds = cellfun(@std,binned_addedLengths_normalized);
+    binned_l_norm_counts = cellfun(@length,binned_addedLengths_normalized);
+    binned_l_norm_sems = binned_l_norm_stds./sqrt(binned_l_norm_counts);
     
     
     % 8. plot subplots for all conditions
     color = rgb(palette{eCol});
     condition = environment_order{eCol};
     
-    % volume
+    
+    % volume, not normalized
     figure(1)
     subplot(1,length(environment_order),eCol)
     plot(xbins_vol,binned_v_means,'o','Color',color)
     hold on
     errorbar(xbins_vol,binned_v_means,binned_v_sems,'.','Color',color)
-    axis([-1 5 -1 4])
+    %axis([0 10 -2 10])
+    axis([0 5 -1 6])
     title(condition)
-    
     if eCol == 1
-        %ylabel('added volume,mean + sem')
-        ylabel('added volume / mean birth volume')
+        ylabel('added volume,mean + sem')
+    end
+    if eCol == 4
+        xlabel('birth volume, mean + sem')
     end
     
+    % volume, normalized
+    figure(2)
+    subplot(1,length(environment_order),eCol)
+    plot(xbins_vol_normalized,binned_v_norm_means,'o','Color',color)
+    hold on
+    errorbar(xbins_vol_normalized,binned_v_norm_means,binned_v_norm_sems,'.','Color',color)
+    %axis([-1 5 -1 4])
+    axis([0 3 -.1 3])
+    title(condition)
+    if eCol == 1
+        ylabel('added volume / mean birth volume')
+    end
     if eCol == 4
-        %xlabel('birth volume, mean + sem')
         xlabel('birth volume / mean birth volume')
     end
     
     
-    % length
-    figure(2)
+    % length, not normalized
+    figure(3)
     subplot(1,length(environment_order),eCol)
     plot(xbins_length,binned_l_means,'o','Color',color)
     hold on
     errorbar(xbins_length,binned_l_means,binned_l_sems,'.','Color',color)
-    axis([-1 5 -1 4])
+    %axis([0 10 -2 10])
+    axis([0 5 -1 6])
     title(condition)
-    
     if eCol == 1
-        %ylabel('added length, mean + sem')
-        ylabel('added length / mean birth length')
+        ylabel('added length, mean + sem')
+    end
+    if eCol == 4
+        xlabel('birth length, mean + sem')
     end
     
+    
+    % length, normalized
+    figure(4)
+    subplot(1,length(environment_order),eCol)
+    plot(xbins_length_normalized,binned_l_norm_means,'o','Color',color)
+    hold on
+    errorbar(xbins_length_normalized,binned_l_norm_means,binned_l_norm_sems,'.','Color',color)
+    %axis([-1 5 -1 4])
+    axis([0 3 -.1 3])
+    title(condition)
+    if eCol == 1
+        ylabel('added length / mean birth length')
+    end
     if eCol == 4
-        %xlabel('birth length, mean + sem')
         xlabel('birth length / mean birth length')
     end
     
