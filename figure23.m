@@ -7,10 +7,9 @@
 %  Strategy:
 
 
-%  Last edit: jen, 2018 May 16
+%  Last edit: jen, 2018 May 28
 
-%  commit: plot a version without error bars to more easily interpret
-%          differences between replicates and timescales
+%  commit: plot a version that removes all negative values
 
 
 % OK let's go!
@@ -175,12 +174,20 @@ for i = 1:length(exptsToInclude)
     
     pre_upshiftBins = lastBin_downshift - preShift_bins : lastBin_downshift;
     
-    
+
     
     % 12. remove data associated with NaN (these are in dVdt as birth events)
+    %       -- re-assigning all negative dV/dt values to NaN
+    
     growthData = [curveFinder timeInPeriodFraction_inBins volumes dVdt_trim2];
-    growthData_nans = growthData(isnan(dVdt_trim2),:);
-    growthData_none = growthData(~isnan(dVdt_trim2),:);
+    growthData(dVdt_trim2 < 0,:) = NaN;
+    
+    dVdt_noNegs = growthData(:,4);
+    growthData_nans = growthData(isnan(dVdt_noNegs),:);
+    growthData_none = growthData(~isnan(dVdt_noNegs),:);
+
+    nanReporter = size(growthData_nans)
+    valuesReporter = size(growthData_none)
     
     % 13. collect volume and dV/dt data into bins and calculate stats
     binned_volumes_mean = accumarray(growthData_none(:,2),growthData_none(:,3),[],@mean);
