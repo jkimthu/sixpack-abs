@@ -32,7 +32,7 @@
 
 %  Last edit: Jen Nguyen, 2018 Jun 5
 %  Commit: compare G_fluc to G_monod and G_jensens with raw and initial vol normalized plots,
-%          including all four replicates of 15 min timescale
+%          using only later TWO replicates of 15 min timescale
 
 
 
@@ -154,15 +154,15 @@ for e = 1:experimentCount
         continue
     end
     
-%     if strcmp(date, '2018-01-12') == 1
-%         disp(strcat(date,': excluded from analysis'))
-%         continue
-%     end
-%     
-%     if strcmp(date, '2018-01-13') == 1
-%         disp(strcat(date,': excluded from analysis'))
-%         continue
-%     end
+    if strcmp(date, '2018-01-12') == 1
+        disp(strcat(date,': excluded from analysis'))
+        continue
+    end
+    
+    if strcmp(date, '2017-11-13') == 1
+        disp(strcat(date,': excluded from analysis'))
+        continue
+    end
 
     disp(strcat(date, ': collecting data!'))
     counter = counter + 1;
