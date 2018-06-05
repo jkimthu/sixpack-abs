@@ -17,9 +17,10 @@
 %       5. call data from structures for plotting
 
 
-% Last edit: jen, 2018 May 6
-% Commit: edit edited dt calculation, to report NaN for dV/dt stats if no
-%         data exists after 3 hrs (bubble in 2018-01-12 high)
+% Last edit: jen, 2018 Jun 5
+% Commit: edit units to plot monod plots per hour, instead of per sec
+
+
 
 % OK let's go!
 
@@ -121,8 +122,8 @@ for e = 1:experimentCount
             dt = mean(diff(firstFullCurve_timestamps)); % timestep in seconds
             
             dV_raw = [NaN; diff(volumes)];
-            dVdt = dV_raw/dt;
-            dVdt_normalizedByVol = dVdt./volumes;
+            dVdt = dV_raw/dt;                           % units = cubic um / sec
+            dVdt_normalizedByVol = dVdt./volumes;       % units = 1/sec
             
             dVdt(isDrop == 1) = NaN;
             dVdt_normalizedByVol(isDrop == 1) = NaN;
@@ -244,21 +245,21 @@ for e = 1:experimentCount
         
         % plot dV/dt data, labeled by stable vs fluc
         figure(1)
-        errorbar(log(concentration(c)), experiment_dVdt_data{c}.mean, experiment_dVdt_data{c}.sem,'Color',color);
+        errorbar(log(concentration(c)), experiment_dVdt_data{c}.mean*3600, experiment_dVdt_data{c}.sem*3600,'Color',color);
         hold on
-        plot(log(concentration(c)), experiment_dVdt_data{c}.mean,'Marker',xmark,'MarkerSize',10,'Color',color)
+        plot(log(concentration(c)), experiment_dVdt_data{c}.mean*3600,'Marker',xmark,'MarkerSize',10,'Color',color)
         hold on
-        ylabel('dV/dt (cubic um/sec)')
+        ylabel('dV/dt (cubic um/hr)')
         xlabel('log fold LB dilution')
         title(strcat('Population-averaged dV/dt vs log LB dilution, full cycles ONLY'))
         
         % plot normalized dV/dt data, labeled by stable vs fluc
         figure(2)
-        errorbar(log(concentration(c)), experiment_dVdt_norm{c}.mean, experiment_dVdt_norm{c}.sem,'Color',color);
+        errorbar(log(concentration(c)), experiment_dVdt_norm{c}.mean*3600, experiment_dVdt_norm{c}.sem*3600,'Color',color);
         hold on
-        plot(log(concentration(c)), experiment_dVdt_norm{c}.mean,'Marker',xmark,'MarkerSize',10,'Color',color)
+        plot(log(concentration(c)), experiment_dVdt_norm{c}.mean*3600,'Marker',xmark,'MarkerSize',10,'Color',color)
         hold on
-        ylabel('(dV/dt)/V (1/sec)')
+        ylabel('(dV/dt)/V (1/hr)')
         xlabel('log fold LB dilution')
         title(strcat('Population-averaged volume-normalized dV/dt vs log LB dilution, full cycles ONLY'))
         
