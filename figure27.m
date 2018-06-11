@@ -20,9 +20,9 @@
 %      14. plot
 
 
-%  Last edit: jen, 2018 May 28
+%  Last edit: jen, 2018 June 7
 
-%  commit: excluded negative dV/dts from analysis
+%  commit: plot dV/dt / V and save values while doing so
 
 
 % OK let's go!
@@ -108,7 +108,7 @@ for i = 1:length(exptsToInclude)
     
     dV_raw_noNan = diff(volumes);
     dV_norm = [NaN; dV_raw_noNan./volumes(1:end-1)];
-    dVdt_overV = dV_norm/dt * 3600;                    % final units = cubic um/sec
+    dVdt_overV = dV_norm/dt * 3600;                    % final units = cubic um/hr
     
     dVdt_overV(isDrop == 1) = NaN;
 
@@ -192,21 +192,23 @@ for i = 1:length(exptsToInclude)
     
     % 12. remove data associated with NaN (these are in dVdt as birth events)
     growthData = [curveFinder timeInPeriodFraction_inBins volumes dVdt_overV_trim2];
-    growthData(dVdt_overV_trim2 < 0,:) = NaN;
     
-    dVdt_noNegs = growthData(:,4);
-    growthData_nans = growthData(isnan(dVdt_noNegs),:);
-    growthData_none = growthData(~isnan(dVdt_noNegs),:);
+    %growthData(dVdt_overV_trim2 < 0,:) = NaN;
+    %dVdt_noNegs = growthData(:,4);
+    
+    dVdt_normalized = growthData(:,4);
+    growthData_nans = growthData(isnan(dVdt_normalized),:);
+    growthData_none = growthData(~isnan(dVdt_normalized),:);
 
     nanReporter = size(growthData_nans)
     valuesReporter = size(growthData_none)
     
     
     % 13. collect volume and dV/dt data into bins and calculate stats
-    binned_volumes_mean = accumarray(growthData_none(:,2),growthData_none(:,3),[],@mean);
-    binned_volumes_std = accumarray(growthData_none(:,2),growthData_none(:,3),[],@std);
-    binned_volumes_counts = accumarray(growthData_none(:,2),growthData_none(:,3),[],@length);
-    binned_volumes_sems = binned_volumes_std./sqrt(binned_volumes_counts);
+%     binned_volumes_mean = accumarray(growthData_none(:,2),growthData_none(:,3),[],@mean);
+%     binned_volumes_std = accumarray(growthData_none(:,2),growthData_none(:,3),[],@std);
+%     binned_volumes_counts = accumarray(growthData_none(:,2),growthData_none(:,3),[],@length);
+%     binned_volumes_sems = binned_volumes_std./sqrt(binned_volumes_counts);
     
     binned_dVdt = accumarray(growthData_none(:,2),growthData_none(:,4),[],@(x) {x});
     binned_dVdt_mean = accumarray(growthData_none(:,2),growthData_none(:,4),[],@mean);
@@ -215,8 +217,20 @@ for i = 1:length(exptsToInclude)
     binned_dVdt_sems = binned_dVdt_std./sqrt(binned_dVdt_counts);
     
     
+    % 14. print shift bins values
+    if timescale ~= 300
+        %stable_upshift = upshiftBins(8:end);
+        pre_upshiftBin_vals = binned_dVdt_mean(pre_upshiftBins)
+        %stable_upshiftBin_vals = mean(binned_dVdt_mean(stable_upshift))
+        upshiftBin_vals = binned_dVdt_mean(upshiftBins)
+        
+        %stable_downshift = downshiftBins(8:end);
+        pre_downshiftBin_vals = binned_dVdt_mean(pre_downshiftBins)
+        %stable_downshiftBin_vals = mean(binned_dVdt_mean(stable_downshift))
+        downshiftBin_vals = binned_dVdt_mean(downshiftBins)
+    end
     
-    % 14. plot
+    % 15. plot
     shapes = {'o','*','square'};
     if timescale == 300
         sp = 1;
