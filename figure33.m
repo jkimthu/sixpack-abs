@@ -1,4 +1,4 @@
-%% figures 1 and 2
+%% figure 33
 
 
 %  Goal: determine whether growth in low, ave, high and fluc environments
@@ -21,7 +21,7 @@
 
 %  Last edit: jen, 2018 June 13
 
-%  Commit: plot population-averaged division W or L vs birth W or L
+%  Commit: edit title
 
 
 %  OK let's go!
