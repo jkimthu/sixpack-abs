@@ -21,8 +21,8 @@
 
 %  Last edit: jen, 2018 June 13
 
-%  Commit: revisited while working on Figure33. edited method of IDing
-%  unique cell cycles.
+%  Commit: corrected one error from method edit. comparison of current and
+%  old method (by looking at final plots) shows no major difference. woot!
 
 
 %  OK let's go!
@@ -115,7 +115,7 @@ for e = 1:experimentCount
         V_division = nan(length(curveIDs),1);
         V_birth = nan(length(curveIDs),1);
         
-        for cc = 1:length(unique_interdivs)
+        for cc = 1:length(curveIDs)
             
             currentVolumes = volume(curveFinder == curveIDs(cc));
             V_division(cc,1) = currentVolumes(end);
@@ -141,11 +141,11 @@ for e = 1:experimentCount
         % 12. calculate mean and standard deviation of birth and division volume
         V_birth_means = mean(V_birth);
         V_div_means = mean(V_division);
-        interdiv_means = mean(unique_interdivs);
+        %interdiv_means = mean(unique_interdivs);
         
         V_birth_stds = std(V_birth);
         V_div_stds = std(V_division);
-        interdiv_stds = std(unique_interdivs);
+        %interdiv_stds = std(unique_interdivs);
         
         
         % 13. plot!
