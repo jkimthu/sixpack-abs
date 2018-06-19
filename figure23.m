@@ -7,9 +7,10 @@
 %  Strategy:
 
 
-%  Last edit: jen, 2018 May 28
+%  Last edit: jen, 2018 June 19
 
-%  commit: plot a version that removes all negative values
+%  commit: edit to fix time trimming. previously had some unit confusion
+%          which led to including whole dataset
 
 
 % OK let's go!
@@ -77,7 +78,7 @@ for i = 1:length(exptsToInclude)
     
     % 7. isolate volume (Va) and timestamp data
     volumes = conditionData_fullOnly(:,12);        % col 12 = calculated va_vals (cubic um)
-    timestamps = conditionData_fullOnly(:,2);      % col 2  = timestamp in seconds
+    timestamps_sec = conditionData_fullOnly(:,2);      % col 2  = timestamp in seconds
     isDrop = conditionData_fullOnly(:,5);          % col 5  = isDrop, 1 marks a birth event
     curveFinder = conditionData_fullOnly(:,6);     % col 6  = curve finder (ID of curve in condition)
     
@@ -86,10 +87,10 @@ for i = 1:length(exptsToInclude)
     curveIDs = unique(curveFinder);
     firstFullCurve = curveIDs(2);
     if length(firstFullCurve) > 1
-        firstFullCurve_timestamps = timestamps(curveFinder == firstFullCurve);
+        firstFullCurve_timestamps = timestamps_sec(curveFinder == firstFullCurve);
     else
         firstFullCurve = curveIDs(3);
-        firstFullCurve_timestamps = timestamps(curveFinder == firstFullCurve);
+        firstFullCurve_timestamps = timestamps_sec(curveFinder == firstFullCurve);
     end
     dt = mean(diff(firstFullCurve_timestamps)); % timestep in seconds
     
@@ -103,10 +104,11 @@ for i = 1:length(exptsToInclude)
     % 9. isolate data to stabilized regions of growth
     minTime = 3;  % hr
     maxTime = bubbletime(condition);
+    timestamps_hr = timestamps_sec/3600;
     
-    times_trim1 = timestamps(timestamps >= minTime);
-    conditionData_trim1 = conditionData_fullOnly(timestamps >= minTime,:);
-    dVdt_trim1 = dVdt(timestamps >= minTime,:);
+    times_trim1 = timestamps_hr(timestamps_hr >= minTime);
+    conditionData_trim1 = conditionData_fullOnly(timestamps_hr >= minTime,:);
+    dVdt_trim1 = dVdt(timestamps_hr >= minTime,:);
     
     if maxTime > 0
         conditionData_trim2 = conditionData_trim1(times_trim1 <= maxTime,:);
@@ -115,7 +117,7 @@ for i = 1:length(exptsToInclude)
         conditionData_trim2 = conditionData_trim1;
         dVdt_trim2 = dVdt_trim1;
     end
-    clear times_trim1 timestamps minTime maxTime bubbletime
+    clear times_trim1 timestamps_hr timestamps_sec minTime maxTime bubbletime
     
     
      % 10. isolate corrected timestamp
@@ -176,35 +178,22 @@ for i = 1:length(exptsToInclude)
     
 
     
-    % 12. remove data associated with NaN (these are in dVdt as birth events)
-    %       -- re-assigning all negative dV/dt values to NaN
+    % 12. remove data associated with NaN (these are in dVdt as birth events)    
+    growthData = [timeInPeriodFraction_inBins dVdt_trim2];
     
-    growthData = [curveFinder timeInPeriodFraction_inBins volumes dVdt_trim2];
-    growthData(dVdt_trim2 < 0,:) = NaN;
-    
-    dVdt_noNegs = growthData(:,4);
-    growthData_nans = growthData(isnan(dVdt_noNegs),:);
-    growthData_none = growthData(~isnan(dVdt_noNegs),:);
+    growthData_nans = growthData(isnan(dVdt_trim2),:);
+    growthData_none = growthData(~isnan(dVdt_trim2),:);
 
-    nanReporter = size(growthData_nans)
-    valuesReporter = size(growthData_none)
-    
-    % 13. collect volume and dV/dt data into bins and calculate stats
-    binned_volumes_mean = accumarray(growthData_none(:,2),growthData_none(:,3),[],@mean);
-    binned_volumes_std = accumarray(growthData_none(:,2),growthData_none(:,3),[],@std);
-    binned_volumes_counts = accumarray(growthData_none(:,2),growthData_none(:,3),[],@length);
-    binned_volumes_sems = binned_volumes_std./sqrt(binned_volumes_counts);
-    
-    binned_dVdt = accumarray(growthData_none(:,2),growthData_none(:,4),[],@(x) {x});
-    binned_dVdt_mean = accumarray(growthData_none(:,2),growthData_none(:,4),[],@mean);
-    binned_dVdt_std = accumarray(growthData_none(:,2),growthData_none(:,4),[],@std);
-    binned_dVdt_counts = accumarray(growthData_none(:,2),growthData_none(:,4),[],@length);
+
+    % 13. collect volume and dV/dt data into bins and calculate stats    
+    binned_dVdt = accumarray(growthData_none(:,1),growthData_none(:,2),[],@(x) {x});
+    binned_dVdt_mean = accumarray(growthData_none(:,1),growthData_none(:,2),[],@mean);
+    binned_dVdt_std = accumarray(growthData_none(:,1),growthData_none(:,2),[],@std);
+    binned_dVdt_counts = accumarray(growthData_none(:,1),growthData_none(:,2),[],@length);
     binned_dVdt_sems = binned_dVdt_std./sqrt(binned_dVdt_counts);
     
     
-    
     % 14. plot
-    shapes = {'o','*','square'};
     if timescale == 300
         sp = 1;
         color_high = rgb('DarkSlateBlue');
