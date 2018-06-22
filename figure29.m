@@ -1,0 +1,208 @@
+% figure 29
+
+%  Goal: violin plots to compare distributions between fluc and stable
+
+%  Strategy:
+
+
+%  Last edit: jen, 2018 June 22
+
+%  commit: violin plots to compare distributions between fluc and
+%          stable, green is 2018-01-16 (15 min) and
+%          blue is 2018-02-01 (60 min)
+%          
+
+
+
+
+% OK let's go!
+
+%% (A) initialize analysis
+clc
+clear
+
+% 0. initialize complete meta data
+cd('/Users/jen/Documents/StockerLab/Data_analysis/')
+load('storedMetaData.mat')
+load('dVdtData_fullOnly_newdVdt.mat')
+
+dataIndex = find(~cellfun(@isempty,storedMetaData));
+
+
+% 1. for all experiments in dataset
+ec = 0; % experiment counter
+exptsToInclude = [10,14];
+%%
+for i = 1:length(exptsToInclude)
+   
+    % 2. collect experiment date
+    e = exptsToInclude(i);
+    index = dataIndex(e);
+    date = storedMetaData{index}.date;
+    timescale = storedMetaData{index}.timescale;
+    
+    disp(strcat(date, ': analyze!'))
+    ec = ec + 1;
+
+    
+    
+    % 3. initialize experiment meta data
+    bubbletime = storedMetaData{index}.bubbletime;
+    
+    
+    % 4. load measured data
+    experimentFolder = strcat('/Users/jen/Documents/StockerLab/Data/LB/',date);
+    cd(experimentFolder)
+    filename = strcat('lb-fluc-',date,'-window5-width1p4-1p7-jiggle-0p5.mat');
+    load(filename,'D5','M','M_va','T');
+    
+    
+    % 5. build data matrix from specified condition
+    for condition = 1:4 % 1 = fluctuating; 3 = ave nutrient condition
+        
+        xy_start = storedMetaData{index}.xys(condition,1);
+        xy_end = storedMetaData{index}.xys(condition,end);
+        conditionData = buildDM(D5, M, M_va, T, xy_start, xy_end,e);
+        
+        
+        % 6. isolate condition data to those with full cell cycles
+        curveIDs = conditionData(:,6);           % col 6 = curve ID
+        conditionData_fullOnly = conditionData(curveIDs > 0,:);
+        clear curveIDs
+        
+        
+        % 7. isolate volume (Va) and timestamp data
+        volumes = conditionData_fullOnly(:,12);        % col 12 = calculated va_vals (cubic um)
+        timestamps_sec = conditionData_fullOnly(:,2);      % col 2  = timestamp in seconds
+        isDrop = conditionData_fullOnly(:,5);          % col 5  = isDrop, 1 marks a birth event
+        curveFinder = conditionData_fullOnly(:,6);     % col 6  = curve finder (ID of curve in condition)
+        
+        
+        % 8. calculate mean timestep and dVdt
+        curveIDs = unique(curveFinder);
+        firstFullCurve = curveIDs(2);
+        if length(firstFullCurve) > 1
+            firstFullCurve_timestamps = timestamps_sec(curveFinder == firstFullCurve);
+        else
+            firstFullCurve = curveIDs(3);
+            firstFullCurve_timestamps = timestamps_sec(curveFinder == firstFullCurve);
+        end
+        dt = mean(diff(firstFullCurve_timestamps)); % timestep in seconds
+        
+        dV_raw = [NaN; diff(volumes)];
+        dVdt = dV_raw/dt * 3600;                    % final units = cubic um/sec
+        dVdt(isDrop == 1) = NaN;
+        
+        dV_raw_noNan = diff(volumes);
+        dV_norm = [NaN; dV_raw_noNan./volumes(1:end-1)];
+        dVdt_overV = dV_norm/dt * 3600;                    % final units = cubic um/hr
+        
+        dVdt_overV(isDrop == 1) = NaN;
+        
+        clear curveFinder isDrop volumes
+        
+        
+        % 9. isolate data to stabilized regions of growth
+        minTime = 3;  % hr
+        maxTime = bubbletime(condition);
+        timestamps_hr = timestamps_sec/3600;
+        
+        times_trim1 = timestamps_hr(timestamps_hr >= minTime);
+        conditionData_trim1 = conditionData_fullOnly(timestamps_hr >= minTime,:);
+        dVdt_trim1 = dVdt(timestamps_hr >= minTime,:);
+        dVdt_overV_trim1 = dVdt_overV(timestamps_hr >= minTime,:);
+        
+        if maxTime > 0
+            conditionData_trim2 = conditionData_trim1(times_trim1 <= maxTime,:);
+            dVdt_trim2 = dVdt_trim1(times_trim1 <= maxTime,:);
+            dVdt_overV_trim2 = dVdt_overV_trim1(times_trim1 <= maxTime,:);
+        else
+            conditionData_trim2 = conditionData_trim1;
+            dVdt_trim2 = dVdt_trim1;
+            dVdt_overV_trim2 = dVdt_overV_trim1;
+        end
+        clear times_trim1 dVdt_trim1 dVdt_overV_trim1 timestamps_hr timestamps_sec minTime maxTime
+        clear isDrop timestamps dV_raw firstFullCurve firstFullCurve_timestamps
+        
+        
+        % 13. isolate birth volume and inter-division time
+        volumes = conditionData_trim2(:,12);            % col 12 = calculated va_vals (cubic um)
+        curveDurations = conditionData_trim2(:,8)/60;   % col 8  = inter-division times 
+        isDrop = conditionData_trim2(:,5);              % col 5  = 1 at birth event, 0 if not
+        
+        vol_atBirth = volumes(isDrop == 1);
+        interDivisions = curveDurations(isDrop == 1);
+        
+        
+        % 14. collectdV/dt data into bins
+        binned_dVdt{condition,1} = dVdt_trim2;
+        binned_dVdt_overV{condition,1} = dVdt_overV_trim2;
+        binned_birthVolumes{condition,1} = vol_atBirth;
+        binned_divisionTimes{condition,1} = interDivisions;
+        
+    end
+    
+    
+    % 14. plot violins by condition, left and right are different experiments
+    
+    % biomass production rate
+    figure(1)
+    if ec == 1
+        distributionPlot(binned_dVdt,'widthDiv',[2 1],'histOri','left','color',[0 0.7 0.7],'showMM',2) % green
+    else
+        distributionPlot(gca,binned_dVdt,'widthDiv',[2 2],'histOri','right','color',[0.25 0.25 0.9],'showMM',2) % purple
+    end
+    xlabel('growth condition')
+    ylabel('dV/dt (cubic um/hr)')
+    title('histograms of growth rates across conditions')
+    legend('left: 2018-01-16 (15min)','right: 2018-02-01 (60min)')
+    axis([0 5 -25 50])
+    
+    
+    % normalized growth rate
+    figure(2)
+    if ec == 1
+        distributionPlot(binned_dVdt_overV,'widthDiv',[2 1],'histOri','left','color',[0 0.7 0.7],'showMM',2) % green
+    else
+        distributionPlot(gca,binned_dVdt_overV,'widthDiv',[2 2],'histOri','right','color',[0.25 0.25 0.9],'showMM',2) % purple
+    end
+    xlabel('growth condition')
+    ylabel('(dV/dt)/V (1/hr)')
+    title('histograms of growth rates across conditions')
+    legend('left: 2018-01-16 (15min)','right: 2018-02-01 (60min)')
+    axis([0 5 -5 10])
+    
+    
+    % volume at birth
+    figure(3)
+    if ec == 1
+        distributionPlot(binned_birthVolumes,'widthDiv',[2 1],'histOri','left','color',[0 0.7 0.7],'showMM',2) % green
+    else
+        distributionPlot(gca,binned_birthVolumes,'widthDiv',[2 2],'histOri','right','color',[0.25 0.25 0.9],'showMM',2) % purple
+    end
+    xlabel('growth condition')
+    ylabel('volume at birth (cubic um)')
+    title('histograms of birth volume across conditions')
+    legend('left: 2018-01-16 (15min)','right: 2018-02-01 (60min)')
+    axis([0 5 0 15])
+    
+    
+    % inter-division time
+    figure(4)
+    if ec == 1
+        distributionPlot(binned_divisionTimes,'widthDiv',[2 1],'histOri','left','color',[0 0.7 0.7],'showMM',2) % green
+    else
+        distributionPlot(gca,binned_divisionTimes,'widthDiv',[2 2],'histOri','right','color',[0.25 0.25 0.9],'showMM',2) % purple
+    end
+    xlabel('growth condition')
+    ylabel('inter-division time (min)')
+    title('histograms of interdivision time across conditions')
+    legend('left: 2018-01-16 (15min)','right: 2018-02-01 (60min)')
+    axis([0 5 0 100])
+    
+    clearvars -except dVdtData_fullOnly_newdVdt storedMetaData ec timePerBin datesForLegend dataIndex exptsToInclude
+    
+end
+
+
+
