@@ -17,8 +17,8 @@
 %       5. call data from structures for plotting
 
 
-% Last edit: jen, 2018 Jun 5
-% Commit: edit units to plot monod plots per hour, instead of per sec
+% Last edit: jen, 2018 Jun 25
+% Commit: plot with all Markers as circles, for beauty
 
 
 
@@ -190,7 +190,8 @@ summaryConcentrations = zeros(1,(experimentCount-1)*3 + 6);
 
 % initialize colors
 palette = {'FireBrick','Chocolate','ForestGreen','Amethyst','MidnightBlue'};
-shapes = {'o','x','square','*'};
+%shapes = {'o','x','square','*'};
+shapes = {'o','o','o','o'};
 
 for e = 1:experimentCount
     
@@ -253,6 +254,7 @@ for e = 1:experimentCount
         xlabel('log fold LB dilution')
         title(strcat('Population-averaged dV/dt vs log LB dilution, full cycles ONLY'))
         
+
         % plot normalized dV/dt data, labeled by stable vs fluc
         figure(2)
         errorbar(log(concentration(c)), experiment_dVdt_norm{c}.mean*3600, experiment_dVdt_norm{c}.sem*3600,'Color',color);
