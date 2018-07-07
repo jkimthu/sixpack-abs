@@ -4,15 +4,19 @@
 %       fluctuating timescale. plot values for Monod and Jensen's
 %       expectations, as well.
 %
-%       five output plots:
+%       six output plots:
 %
 %           1. G_high vs G_low across experiments (part one)
 
 %           2. expectations, plotting raw dV/dt values
 %           3. expectations, plotting raw dV/dt values normalized to G_jensens
+
 %           4. expectations, plotting dV/dt values normalized by initial volume
 %           5. expectations, plotting dV/dt values normalized by initial
 %              volume and G_jensens
+
+%           6. expectations, plotting dV/dt values normalized by initial 
+%              volume and G_monod
 
 
 
@@ -30,9 +34,8 @@
 
 
 
-%  Last edit: Jen Nguyen, 2018 Jun 5
-%  Commit: compare G_fluc to G_monod and G_jensens with raw and initial vol
-%  normalized plots, using all four replicates in 15 min timescale
+%  Last edit: Jen Nguyen, 2018 Jul 7
+%  Commit: add plot normalizing growth rate (1/hr) by G_monod for poster
 
 
 
@@ -298,8 +301,30 @@ errorbar(-1,G_monod_norm/G_jensens_norm,stableRates_norm_std(ave)./G_jensens_nor
 hold on
 plot(6, G_jensens_norm/G_jensens_norm,'o','Color',rgb('SlateGray'),'MarkerSize',10,'LineWidth',2)
 
-axis([-1 6 0 1.6])
+axis([-1 6 0.2 1.4])
 title('growth, relative to Jensens expectations')
 xlabel('fluctuating timescale')
 ylabel('mean dV/dt / V, normalized to G_jensens')
 
+
+% dVdt normalized by initial vol, normalized by G_monod
+figure(6)
+plot([1 2 3 4],Gfluc_norm_means./G_monod_norm,'o','Color',rgb('DarkTurquoise'),'MarkerSize',10,'LineWidth',2);
+hold on
+errorbar([1 2 3 4],Gfluc_norm_means./G_monod_norm,Gfluc_norm_std./G_monod_norm,'Color',rgb('DarkTurquoise'));
+hold on
+plot(-1,G_monod_norm/G_monod_norm,'o','Color',rgb('DarkCyan'),'MarkerSize',10,'LineWidth',2);
+hold on
+errorbar(-1,G_monod_norm/G_monod_norm,stableRates_norm_std(ave)./G_monod_norm,'Color',rgb('DarkCyan'),'LineWidth',2);
+hold on
+plot(6, G_jensens_norm/G_monod_norm,'o','Color',rgb('SlateGray'),'MarkerSize',10,'LineWidth',2)
+
+axis([-1 6 0.2 1.4])
+title('growth, relative to average nutrient concentration')
+xlabel('fluctuating timescale')
+ylabel('mean dV/dt / V, normalized to G_monod')
+
+G_monod_norm
+G_jensens_norm
+Gfluc_norm_means
+Gfluc_norm_std
