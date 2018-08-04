@@ -319,7 +319,7 @@ errorbar(-1,G_monod_norm/G_monod_norm,stableRates_norm_std(ave)./G_monod_norm,'C
 hold on
 plot(6, G_jensens_norm/G_monod_norm,'o','Color',rgb('SlateGray'),'MarkerSize',10,'LineWidth',2)
 
-axis([-1 6 0.2 1.4])
+axis([-1 6 0 1.6])
 title('growth, relative to average nutrient concentration')
 xlabel('fluctuating timescale')
 ylabel('mean dV/dt / V, normalized to G_monod')
