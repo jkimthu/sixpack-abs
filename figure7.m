@@ -6,31 +6,38 @@
 %         version 2: (dV/dt)/V vs time
 % 
 
-% last updated: jen, 2018 June 11
+% last updated: jen, 2018 August 04
 
-% commit: update method of calculating dV/dt. also plot dV/dt normalized by initial volume over time
+% commit: plot growth rate of 2018-06-15 data with two width upperBound in tracking,
+%         for comparison with data using only one minimum (1.7)
+
 
 % OK let's go!
 
-%% 
+%%
+
 clear
 clc
 
 % 0. initialize complete meta data
 cd('/Users/jen/Documents/StockerLab/Data_analysis/')
-load('storedMetaData.mat')
 
+
+load('storedMetaData.mat')
 dataIndex = find(~cellfun(@isempty,storedMetaData));
 
 % 1. for all experiments in dataset
 binsPerHour = 30;
 exptCounter = 0; % experiment counter
 
-for e = 8:11
+%%
+for e = 17:length(dataIndex)
     
     % 2. collect experiment date
     index = dataIndex(e);
     date = storedMetaData{index}.date;
+    expType = storedMetaData{index}.experimentType;
+    
     timescale = storedMetaData{index}.timescale;
     
     % exclude outliers from analysis (2017-10-31 and monod experiments)
@@ -55,11 +62,11 @@ for e = 8:11
     
     
     % 5. build data matrix from specified condition
-    for condition = 1:4 
+    for condition = 1:length(bubbletime)
     
         xy_start = storedMetaData{index}.xys(condition,1);
         xy_end = storedMetaData{index}.xys(condition,end);
-        conditionData = buildDM(D5, M, M_va, T, xy_start, xy_end,e);
+        conditionData = buildDM(D5, M, M_va, T, xy_start, xy_end,e,expType);
         
         
         % 6. isolate condition data to those with full cell cycles
