@@ -8,8 +8,8 @@
 
 % last updated: jen, 2018 August 04
 
-% commit: plot growth rate of 2018-06-15 data with two width upperBound in tracking,
-%         for comparison with data using only one minimum (1.7)
+% commit: plot growth rate of both single upshift experiments, 2018-06-15
+%         and 2018-08-01, from tracking using one upper width bound (1.7)
 
 
 % OK let's go!
@@ -58,6 +58,7 @@ for e = 17:length(dataIndex)
     experimentFolder = strcat('/Users/jen/Documents/StockerLab/Data/LB/',date);
     cd(experimentFolder)
     filename = strcat('lb-fluc-',date,'-window5-width1p4-1p7-jiggle-0p5.mat');
+    %filename = strcat('lb-fluc-',date,'-window5-width1p7-jiggle-0p5.mat');
     load(filename,'D5','M','M_va','T');
     
     
