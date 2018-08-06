@@ -6,11 +6,11 @@
 %         version 2: (dV/dt)/V vs time
 % 
 
-% last updated: jen, 2018 August 04
+% last updated: jen, 2018 August 06
 
-% commit: plot growth rate of both single upshift experiments, 2018-06-15
-%         and 2018-08-01, from tracking using one upper width bound (1.7)
-
+% commit: plot growth rate single upshift experiment, 2018-06-15, tracked
+%         using the lower width bound 1.4 for fluc xys 1-10
+%         
 
 % OK let's go!
 
@@ -31,7 +31,7 @@ binsPerHour = 30;
 exptCounter = 0; % experiment counter
 
 %%
-for e = 17:length(dataIndex)
+for e = 17%:length(dataIndex)
     
     % 2. collect experiment date
     index = dataIndex(e);
