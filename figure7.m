@@ -6,11 +6,12 @@
 %         version 2: (dV/dt)/V vs time
 % 
 
-% last updated: jen, 2018 August 06
+% last updated: jen, 2018 August 13
 
-% commit: plot growth rate single upshift experiment, 2018-06-15, tracked
-%         using the lower width bound 1.4 for fluc xys 1-10
-%         
+% commit: plot growth rates vs time for three new single downshifts, 
+%         2018-08-07, 2018-08-08, and 2018-08-09
+
+         
 
 % OK let's go!
 
@@ -31,7 +32,7 @@ binsPerHour = 30;
 exptCounter = 0; % experiment counter
 
 %%
-for e = 17%:length(dataIndex)
+for e = 19:length(dataIndex)
     
     % 2. collect experiment date
     index = dataIndex(e);
@@ -57,8 +58,8 @@ for e = 17%:length(dataIndex)
     % 4. load measured data
     experimentFolder = strcat('/Users/jen/Documents/StockerLab/Data/LB/',date);
     cd(experimentFolder)
-    filename = strcat('lb-fluc-',date,'-window5-width1p4-1p7-jiggle-0p5.mat');
-    %filename = strcat('lb-fluc-',date,'-window5-width1p7-jiggle-0p5.mat');
+    %filename = strcat('lb-fluc-',date,'-window5-width1p4-1p7-jiggle-0p5.mat');
+    filename = strcat('lb-fluc-',date,'-window5-width-1p7-jiggle-0p5.mat');
     load(filename,'D5','M','M_va','T');
     
     
