@@ -44,8 +44,7 @@
 %  Last edit: jen, 2018 Aug 19
 
 
-%  commit: edit to use new buildDM (exptType) and calculateGrowthRate
-%          functions, the latter makes Figure23 redundant (retired). 
+%  commit: repaired error due to calculating growth after trimming by time 
 
 
 % OK let's go!
@@ -71,8 +70,8 @@ timePerBin = input(prompt);
 
 
 % 1. create array of experiments of interest, then loop through each:
-exptArray = [6,7,10:14]; % use corresponding dataIndex values
-%exptCounter = 0; % experiment counter
+exptArray = [5,6,7,10:15]; % use corresponding dataIndex values
+
 
 %%
 for e = 1:length(exptArray)
@@ -85,14 +84,7 @@ for e = 1:length(exptArray)
     expType = storedMetaData{index}.experimentType;
     
     disp(strcat(date, ': analyze!'))
-    %exptCounter = exptCounter + 1;
-    
-    % reset experiment counter at start of new timescale
-    %if e == 10 || e == 12
-    %    exptCounter = 1;
-    %end
-    
-    
+
 
     
     % 3. load measured experiment data
@@ -111,13 +103,33 @@ for e = 1:length(exptArray)
     clear xy_start xy_end
     
     
+    
     % 5. isolate condition data to those from full cell cycles
     curveIDs = conditionData(:,6);           % col 6 = curve ID
     conditionData_fullOnly = conditionData(curveIDs > 0,:);
     clear curveFinder
     
     
-    % 6. isolate data to stabilized regions of growth
+    
+    % 6. isolate volume (Va), timestamp, mu, drop and curveID data
+    volumes = conditionData_fullOnly(:,12);            % col 12 = calculated va_vals (cubic um)
+    timestamps_sec = conditionData_fullOnly(:,2);      % col 2  = timestamp in seconds
+    isDrop = conditionData_fullOnly(:,5);              % col 5  = isDrop, 1 marks a birth event
+    curveFinder = conditionData_fullOnly(:,6);         % col 6  = curve finder (ID of curve in condition)
+    mus = conditionData_fullOnly(:,14);           % col 14 = mu, calculated from volume tracks
+    
+    
+    
+    % 7. calculate growth rate
+    growthRates = calculateGrowthRate(volumes,timestamps_sec,isDrop,curveFinder,mus);
+    
+    
+    
+    
+    % 8. isolate data to stabilized regions of growth
+    %    NOTE: errors (excessive negative growth rates) occur at trimming
+    %          point if growth rate calculation occurs AFTER time trim.
+    %
     minTime = 3;  % hr
     maxTime = bubbletime(condition);
     timestamps_sec = conditionData_fullOnly(:,2); % time in seconds converted to hours
@@ -126,31 +138,20 @@ for e = 1:length(exptArray)
     % trim to minumum
     times_trim1 = timestamps_hr(timestamps_hr >= minTime);
     conditionData_trim1 = conditionData_fullOnly(timestamps_hr >= minTime,:);
+    growthRates_trim1 = growthRates(timestamps_hr >= minTime,:);
     
     % trim to maximum
     if maxTime > 0
         conditionData_trim2 = conditionData_trim1(times_trim1 <= maxTime,:);
+        growthRates_trim2 = growthRates_trim1(times_trim1 <= maxTime,:);
     else
         conditionData_trim2 = conditionData_trim1;
+        growthRates_trim2 = growthRates_trim1;
     end
+    clear growthRates conditionData_fullOnly
 
     
-    
-    
-    % 7. isolate volume (Va), timestamp, mu, drop and curveID data
-    volumes = conditionData_trim2(:,12);            % col 12 = calculated va_vals (cubic um)
-    timestamps_sec = conditionData_trim2(:,2);      % col 2  = timestamp in seconds
-    isDrop = conditionData_trim2(:,5);              % col 5  = isDrop, 1 marks a birth event
-    curveFinder = conditionData_trim2(:,6);         % col 6  = curve finder (ID of curve in condition)
-    mus = conditionData_trim2(:,14);           % col 14 = mu, calculated from volume tracks
-    
-    
-    
-    % 8. calculate growth rate
-    growthRates = calculateGrowthRate(volumes,timestamps_sec,isDrop,curveFinder,mus);
-    
-    
-    
+     
     % 9. isolate selected specific growth rate
     if strcmp(specificGrowthRate,'raw') == 1
         specificColumn = 1;         % for selecting appropriate column in growthRates
@@ -164,7 +165,7 @@ for e = 1:length(exptArray)
         specificColumn = 5;
     end
     
-    growthRt = growthRates(:,specificColumn);
+    growthRt = growthRates_trim2(:,specificColumn);
     
     
     
@@ -195,6 +196,7 @@ for e = 1:length(exptArray)
     binaryNutrientSignal = zeros(length(timeInQuarters),1);
     binaryNutrientSignal(timeInQuarters == 1) = 1;
     binaryNutrientSignal(timeInQuarters == 4) = 1;
+    
     
     
     % 13. assign corrected timestamps to bins, by which to accumulate growth rate data
@@ -270,9 +272,9 @@ for e = 1:length(exptArray)
     plot((1:length(binned_mean(upshiftBins)))*timePerBin,binned_mean(upshiftBins),'Color',color_high,'LineWidth',1)
     grid on
     hold on
-    title(strcat('upshift: mean growth rate, binned every (',num2str(timePerBin),') sec'))
+    title(strcat('response to upshift: binned every (',num2str(timePerBin),') sec'))
     xlabel('time (sec)')
-    ylabel(specificGrowthRate)
+    ylabel(strcat('growth rate: (',specificGrowthRate,')'))
     axis([preShift_bins*-1*timePerBin,1800,-2,6])
     
     subplot(2,1,2) % downshift
@@ -281,9 +283,9 @@ for e = 1:length(exptArray)
     plot((1:length(binned_mean(downshiftBins)))*timePerBin,binned_mean(downshiftBins),'Color',color_low,'LineWidth',1)
     grid on
     hold on
-    title(strcat('downshift: mean growth rate, binned every (',num2str(timePerBin),') sec'))
+    title(strcat('response to downshift: binned every (',num2str(timePerBin),') sec'))
     xlabel('time (sec)')
-    ylabel(specificGrowthRate)
+    ylabel(strcat('growth rate: (',specificGrowthRate,')'))
     axis([preShift_bins*-1*timePerBin,1800,-2,6])
     
     
@@ -295,9 +297,9 @@ for e = 1:length(exptArray)
     plot((1:length(binned_mean(upshiftBins)))*timePerBin,binned_mean(upshiftBins),'Color',color_high,'LineWidth',1)
     grid on
     hold on
-    title(strcat(num2str(timescale),': upshift, mean growth rate'))
+    title(strcat(num2str(timescale),': response to upshift'))
     xlabel('time (sec)')
-    ylabel('specificGrowthRate')
+    ylabel(strcat('growth rate: (',specificGrowthRate,')'))
     axis([preShift_bins*-1*timePerBin,1800,-2,6])
     
     
@@ -309,9 +311,9 @@ for e = 1:length(exptArray)
     plot((1:length(binned_mean(downshiftBins)))*timePerBin,binned_mean(downshiftBins),'Color',color_low,'LineWidth',1)
     grid on
     hold on
-    title(strcat(num2str(timescale),': downshift, mean growth rate'))
+    title(strcat(num2str(timescale),': response to downshift'))
     xlabel('time (sec)')
-    ylabel('specificGrowthRate')
+    ylabel(strcat('growth rate: (',specificGrowthRate',')'))
     axis([preShift_bins*-1*timePerBin,1800,-2,6])
     
     
