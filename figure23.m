@@ -7,10 +7,9 @@
 %  Strategy:
 
 
-%  Last edit: jen, 2018 June 19
+%  Last edit: jen, 2018 Aug 19
+%  commit: retired, see Figure 27
 
-%  commit: edit to fix time trimming. previously had some unit confusion
-%          which led to including whole dataset
 
 
 % OK let's go!
