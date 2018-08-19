@@ -8,12 +8,12 @@
 %       0. initialize directory and meta data
 %       0. define time binning and growth rates of interest, see comments below for details 
 %       1. create array of experiments of interest, for each:
-%               2. collect experiment date
-%               3. initialize experiment meta data
+%               2. initialize experiment meta data
+%               3. 
 %               4. load measured data
 %               5. for each condition in current experiment, build data matrix from specified condition
 %                       6. isolate condition data to those with full cell cycles
-%                       7. isolate data to stabilized regions of growth
+%                       7. truncate data to non-erroneous (e.g. bubbles) timestamps
 %                       8. isolate volume (Va), timestamp, mu, drop and curveID data
 %                       9. calculate growth rate
 %                      10. bin growth rate into time bins based on timestamp
@@ -62,19 +62,14 @@ exptArray = [3;7;12;15;22;26]; % use corresponding dataIndex values
 for e = 1:length(exptArray)
     
     
-    % 2. collect experiment date
+    % 2. initialize experiment meta data
     index = exptArray(e); %dataIndex(e);
     date = storedMetaData{index}.date;
     expType = storedMetaData{index}.experimentType;
+    bubbletime = storedMetaData{index}.bubbletime;
     
     timescale = storedMetaData{index}.timescale;
     disp(strcat(date, ': analyze!'))
-    
-    
-    
-    % 3. initialize experiment meta data
-    xys = storedMetaData{index}.xys;
-    bubbletime = storedMetaData{index}.bubbletime;
     
     
     
@@ -106,7 +101,7 @@ for e = 1:length(exptArray)
         
         
         
-        % 7. isolate data to stabilized regions of growth
+        % 7. truncate data to non-erroneous (e.g. bubbles) timestamps
         maxTime = bubbletime(condition);
         timestamps = conditionData_fullOnly(:,2)/3600; % time in seconds converted to hours
         
