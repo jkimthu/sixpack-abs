@@ -15,8 +15,7 @@
 
 % Last edit: jen, 2018 August 26
 
-% Commit: edit to use new buildDM (index instead of e, exptType) and
-%         calculateGrowthRate functions, plot log calculated growth rate!
+% Commit: limit data to integer amounts of period
  
 
 
@@ -117,7 +116,7 @@ for e = 1:numExperiments % # experiments without single upshifts
         %          point if growth rate calculation occurs AFTER time trim.
 
         minTime = 3;  % hr
-        maxTime = storedMetaData{index}.bubbletime(c);
+        maxTime = floor(storedMetaData{index}.bubbletime(c)); % limit analysis to whole integer # of periods
         timestamps_hr = conditionData_fullOnly(:,2)/3600; % time in seconds converted to hours
         
         % trim to minumum
@@ -182,7 +181,7 @@ end
 
 %% 11. Save new data into stored data structure
 cd('/Users/jen/Documents/StockerLab/Data_analysis/')
-save(strcat('growthRateData_fullOnly_',specificGrowthRate,'.mat'),'growthRateData_fullOnly','specificGrowthRate')
+save(strcat('growthRateData_fullOnly_',specificGrowthRate,'_wholeInteger.mat'),'growthRateData_fullOnly','specificGrowthRate')
 
 
 %% 12. plot growth rate over nutrient concentration
@@ -191,7 +190,7 @@ clear
 
 cd('/Users/jen/Documents/StockerLab/Data_analysis/')
 load('storedMetaData.mat')
-load('growthRateData_fullOnly_log.mat')
+load('growthRateData_fullOnly_log_wholeInteger.mat')
 dataIndex = find(~cellfun(@isempty,storedMetaData));
 numExperiments = 16;
 
