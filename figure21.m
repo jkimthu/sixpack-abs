@@ -2,24 +2,22 @@
 
 
 % Goal: Monod plot of growth rate vs nutrient concentration,
-%       where growth rate is calculated in two ways:
-%
-%       A. mean of all instantaneous dV/dt in experiment, from ful curves ONLY
-%       B. mean of all instantaneous dV/dt, from full curves ONLY, normalized by instantaneous volume
 
 
 % Strategy:
 %
-%       1. collect instantaneous dV/dt and normalized dV/dt from full curves only, after 3 hours
+%       1. collect instantaneous growth rates from full curves only, after 3 hours
 %       2. calculate mean, std, counts, and sem for each condition of each experiment
 %       3. store stats into a structure
-%       4. save two structures: one for dV/dt, one for normalized dV/dt
+%       4. save a data structure of stats from all experiments
 %       5. call data from structures for plotting
 
 
-% Last edit: jen, 2018 Jun 25
-% Commit: plot with all Markers as circles, for beauty
+% Last edit: jen, 2018 August 26
 
+% Commit: edit to use new buildDM (index instead of e, exptType) and
+%         calculateGrowthRate functions, plot log calculated growth rate!
+ 
 
 
 % OK let's go!
@@ -34,21 +32,30 @@ clc
 cd('/Users/jen/Documents/StockerLab/Data_analysis/')
 load('storedMetaData.mat')
 
-dataIndex = find(~cellfun(@isempty,storedMetaData));
-dVdtData_fullOnly_newdVdt = cell(size(storedMetaData));
-dVdtData_fullOnly_normalized_newdVdt = cell(size(storedMetaData));
+% 0. define growth rate of interest
+prompt = 'Enter specific growth rate definition as string (raw / norm / log / lognorm / mu): ';
+specificGrowthRate = input(prompt);
+
+
+growthRateData_fullOnly = cell(size(storedMetaData));
+
+
 
 % initialize summary vectors for calculated data
-experimentCount = length(dataIndex);
+dataIndex = find(~cellfun(@isempty,storedMetaData));
 
+
+%%
 % 1. for each experiment, move to folder and load data
-for e = 1:experimentCount
+numExperiments = 16;
+
+for e = 1:numExperiments % # experiments without single upshifts
     
     % identify experiment by date
     index = dataIndex(e);
     date = storedMetaData{index}.date;
     timescale = storedMetaData{index}.timescale;
-    
+    expType = storedMetaData{index}.experimentType;
     
     % move directory to experiment data
     experimentFolder = strcat('/Users/jen/Documents/StockerLab/Data/LB/',date);
@@ -66,10 +73,10 @@ for e = 1:experimentCount
     load(filename,'D5','M','M_va','T')
     
     % build experiment data matrix
-    display(strcat('Experiment (', num2str(e),') of (', num2str(length(dataIndex)),')'))
+    display(strcat('Experiment (', num2str(e),') of (', num2str(numExperiments),')'))
     xy_start = 1;
     xy_end = length(D5);
-    exptData = buildDM(D5,M,M_va,T,xy_start,xy_end,e);
+    exptData = buildDM(D5,M,M_va,T,xy_start,xy_end,index,expType);
     
     clear D5 M M_va T filename experimentFolder
    
@@ -78,6 +85,7 @@ for e = 1:experimentCount
     xys = storedMetaData{index}.xys;
     xy_dimensions = size(xys);
     totalConditions = xy_dimensions(1);
+    
     
     for c = 1:totalConditions
         
@@ -89,111 +97,116 @@ for e = 1:experimentCount
         conditionData_fullOnly = conditionData(curveFinder > 0,:);
         clear curveFinder
         
-        % 5. isolate data to stabilized regions of growth
-        minTime = 3;  % hr
-        maxTime = storedMetaData{index}.bubbletime(c);
-        timestamps = conditionData_fullOnly(:,2)/3600; % time in seconds converted to hours
-        
-        times_trim1 = timestamps(timestamps >= minTime);
-        conditionData_trim1 = conditionData_fullOnly(timestamps >= minTime,:);
-        
-        if maxTime > 0
-            conditionData_trim2 = conditionData_trim1(times_trim1 <= maxTime,:);
-        else
-            conditionData_trim2 = conditionData_trim1;
-        end
-        clear times_trim1 timestamps minTime maxTime
-        
         
         % 6. isolate volume (Va), dVdt and timestamp data from current condition
-        volumes = conditionData_trim2(:,12);        % col 12 = calculated va_vals (cubic um)
-        timestamps = conditionData_trim2(:,2);      % col 2  = timestamp in seconds
-        isDrop = conditionData_trim2(:,5);          % col 5  = isDrop, 1 marks a birth event
-        curveFinder = conditionData_trim2(:,6);     % col 6  = curve finder (ID of curve in condition)
+        volumes = conditionData_fullOnly(:,12);        % col 12 = calculated va_vals (cubic um)
+        timestamps_sec = conditionData_fullOnly(:,2);      % col 2  = timestamp in seconds
+        isDrop = conditionData_fullOnly(:,5);          % col 5  = isDrop, 1 marks a birth event
+        curveFinder = conditionData_fullOnly(:,6);     % col 6  = curve finder (ID of curve in condition)
+        mus = conditionData_fullOnly(:,14);           % col 14 = mu, calculated from volume tracks
         
-        % calculate mean timestep
-        if isempty(volumes)
-            dVdt = [];
-            dVdt_normalizedByVol = [];
+        
+        % 7. calculate growth rate
+        growthRates = calculateGrowthRate(volumes,timestamps_sec,isDrop,curveFinder,mus);
+        
+        
+        
+        
+        % 8. isolate data to stabilized regions of growth
+        %    NOTE: errors (excessive negative growth rates) occur at trimming
+        %          point if growth rate calculation occurs AFTER time trim.
+
+        minTime = 3;  % hr
+        maxTime = storedMetaData{index}.bubbletime(c);
+        timestamps_hr = conditionData_fullOnly(:,2)/3600; % time in seconds converted to hours
+        
+        % trim to minumum
+        times_trim1 = timestamps_hr(timestamps_hr >= minTime);
+        conditionData_trim1 = conditionData_fullOnly(timestamps_hr >= minTime,:);
+        growthRates_trim1 = growthRates(timestamps_hr >= minTime,:);
+        
+        % trim to maximum
+        if maxTime > 0
+            conditionData_trim2 = conditionData_trim1(times_trim1 <= maxTime,:);
+            growthRates_trim2 = growthRates_trim1(times_trim1 <= maxTime,:);
         else
-            curveIDs = unique(curveFinder);
-            firstFullCurve = curveIDs(2);
-            firstFullCurve_timestamps = timestamps(curveFinder == firstFullCurve);
-            dt = mean(diff(firstFullCurve_timestamps)); % timestep in seconds
-            
-            dV_raw = [NaN; diff(volumes)];
-            dVdt = dV_raw/dt;                           % units = cubic um / sec
-            dVdt_normalizedByVol = dVdt./volumes;       % units = 1/sec
-            
-            dVdt(isDrop == 1) = NaN;
-            dVdt_normalizedByVol(isDrop == 1) = NaN;
-            %clear conditionData
+            conditionData_trim2 = conditionData_trim1;
+            growthRates_trim2 = growthRates_trim1;
+        end
+        clear times_trim1 timestamps_hr minTime maxTime
+        clear growthRates conditionData_fullOnly
+        
+        
+        
+        % 9. isolate selected specific growth rate
+        if strcmp(specificGrowthRate,'raw') == 1
+            specificColumn = 1;         % for selecting appropriate column in growthRates
+        elseif strcmp(specificGrowthRate,'norm') == 1
+            specificColumn = 2;
+        elseif strcmp(specificGrowthRate,'log') == 1
+            specificColumn = 3;
+        elseif strcmp(specificGrowthRate,'lognorm') == 1
+            specificColumn = 4;
+        elseif strcmp(specificGrowthRate,'mu') == 1;
+            specificColumn = 5;
         end
         
-        % 7. calculate average and s.e.m. of stabilized data        
-        mean_dVdt = nanmean(dVdt);
-        count_dVdt = length(dVdt(~isnan(dVdt)));
-        std_dVdt = nanstd(dVdt);
-        sem_dVdt = std_dVdt./sqrt(count_dVdt);
-        
-        mean_dVdt_normalized = nanmean(dVdt_normalizedByVol);
-        count_dVdt_normalized = length(dVdt_normalizedByVol(~isnan(dVdt_normalizedByVol)));
-        std_dVdt_normalized = nanstd(dVdt_normalizedByVol);
-        sem_dVdt_normalized = std_dVdt_normalized./sqrt(count_dVdt_normalized);
+        growthRt = growthRates_trim2(:,specificColumn);
+
         
         
-        % 8. accumulate data for storage / plotting        
-        compiled_dVdt{c}.mean = mean_dVdt;
-        compiled_dVdt{c}.std = std_dVdt;
-        compiled_dVdt{c}.count = count_dVdt;
-        compiled_dVdt{c}.sem = sem_dVdt;
+        % 10. calculate average and s.e.m. of stabilized data        
+        mean_growthRate = nanmean(growthRt);
+        count_growthRate = length(growthRt(~isnan(growthRt)));
+        std_growthRate = nanstd(growthRt);
+        sem_growthRate = std_growthRate./sqrt(count_growthRate);
         
-        compiled_dVdt_normalized{c}.mean = mean_dVdt_normalized;
-        compiled_dVdt_normalized{c}.std = std_dVdt_normalized;
-        compiled_dVdt_normalized{c}.count = count_dVdt_normalized;
-        compiled_dVdt_normalized{c}.sem = sem_dVdt_normalized;
         
-        clear mean_dVdt std_dVdt count_dVdt sem_dVdt
-        clear mean_dVdt_normalized std_dVdt_normalized count_dVdt_normalized sem_dVdt_normalized
+        % 10. accumulate data for storage / plotting        
+        compiled_growthRate{c}.mean = mean_growthRate;
+        compiled_growthRate{c}.std = std_growthRate;
+        compiled_growthRate{c}.count = count_growthRate;
+        compiled_growthRate{c}.sem = sem_growthRate;
+        
+        clear mean_growthRate std_growthRate count_growthRate sem_growthRate
     
     end
     
-    % 10. store data from all conditions into measured data structure        
-    dVdtData_fullOnly_newdVdt{index} = compiled_dVdt;
-    dVdtData_fullOnly_normalized_newdVdt{index} = compiled_dVdt_normalized;
     
-    clear compiled_dVdt compiled_dVdt_normalized
+    % 11. store data from all conditions into measured data structure        
+    growthRateData_fullOnly{index} = compiled_growthRate;
+    clear compiled_growthRate 
+    
 end
 
 
 %% 11. Save new data into stored data structure
 cd('/Users/jen/Documents/StockerLab/Data_analysis/')
-save('dVdtData_fullOnly_newdVdt.mat','dVdtData_fullOnly_newdVdt')
-save('dVdtData_fullOnly_normalized_newdVdt.mat','dVdtData_fullOnly_normalized_newdVdt')
+save(strcat('growthRateData_fullOnly_',specificGrowthRate,'.mat'),'growthRateData_fullOnly','specificGrowthRate')
 
-%% 12. plot average biovolume production rate over time
+
+%% 12. plot growth rate over nutrient concentration
 clc
 clear
 
 cd('/Users/jen/Documents/StockerLab/Data_analysis/')
 load('storedMetaData.mat')
-load('dVdtData_fullOnly_newdVdt.mat')
-load('dVdtData_fullOnly_normalized_newdVdt.mat')
+load('growthRateData_fullOnly_log.mat')
 dataIndex = find(~cellfun(@isempty,storedMetaData));
-experimentCount = length(dataIndex);
+numExperiments = 16;
 
-
+%%
 % initialize summary stats for fitting
 counter = 0;
-summaryMeans = zeros(1,(experimentCount-1)*3 + 6);
-summaryConcentrations = zeros(1,(experimentCount-1)*3 + 6);
+summaryMeans = zeros(1,(numExperiments-1)*3 + 6);
+summaryConcentrations = zeros(1,(numExperiments-1)*3 + 6);
 
 % initialize colors
 palette = {'FireBrick','Chocolate','ForestGreen','Amethyst','MidnightBlue'};
 %shapes = {'o','x','square','*'};
 shapes = {'o','o','o','o'};
 
-for e = 1:experimentCount
+for e = 1:numExperiments;
     
     % identify experiment by date
     index = dataIndex(e);
@@ -210,13 +223,32 @@ for e = 1:experimentCount
     % load timescale
     timescale = storedMetaData{index}.timescale;
     
-    % isolate biomass prod data for current experiment
-    experiment_dVdt_data = dVdtData_fullOnly_newdVdt{index};
-    experiment_dVdt_norm = dVdtData_fullOnly_normalized_newdVdt{index};
+    % isolate growth rate data for current experiment
+    experiment_gr_data = growthRateData_fullOnly{index};
     
     % isolate concentration data for current experiment
     concentration = storedMetaData{index}.concentrations;
     
+    
+    % determine axis range for plotting
+        if strcmp(specificGrowthRate,'raw') == 1
+            xmin = -5;                  % lower limit for plotting x axis
+            xmax = 25;                  % upper limit for plotting x axis
+        elseif strcmp(specificGrowthRate,'norm') == 1
+            xmin = -1;
+            xmax = 5;
+        elseif strcmp(specificGrowthRate,'log') == 1
+            xmin = 0.25;
+            xmax = 2.75;
+        elseif strcmp(specificGrowthRate,'lognorm') == 1
+            xmin = -0.5;
+            xmax = 1;
+        elseif strcmp(specificGrowthRate,'mu') == 1;
+            xmin = -2;
+            xmax = 4;
+        end
+        
+        
     
     for c = 1:length(concentration)
         
@@ -244,27 +276,20 @@ for e = 1:experimentCount
         end
         
         
-        % plot dV/dt data, labeled by stable vs fluc
+        % plot growth rate data, labeled by stable vs fluc
         figure(1)
-        errorbar(log(concentration(c)), experiment_dVdt_data{c}.mean*3600, experiment_dVdt_data{c}.sem*3600,'Color',color);
+        % NOTE: dividing by natural log(2) should only happen for log calculation
+        %       of growth rate !
+        errorbar(log(concentration(c)), experiment_gr_data{c}.mean/log(2), experiment_gr_data{c}.sem/log(2),'Color',color);
         hold on
-        plot(log(concentration(c)), experiment_dVdt_data{c}.mean*3600,'Marker',xmark,'MarkerSize',10,'Color',color)
+        plot(log(concentration(c)), experiment_gr_data{c}.mean/log(2),'Marker',xmark,'MarkerSize',10,'Color',color)
         hold on
-        ylabel('dV/dt (cubic um/hr)')
-        xlabel('log fold LB dilution')
-        title(strcat('Population-averaged dV/dt vs log LB dilution, full cycles ONLY'))
         
-
-        % plot normalized dV/dt data, labeled by stable vs fluc
-        figure(2)
-        errorbar(log(concentration(c)), experiment_dVdt_norm{c}.mean*3600, experiment_dVdt_norm{c}.sem*3600,'Color',color);
-        hold on
-        plot(log(concentration(c)), experiment_dVdt_norm{c}.mean*3600,'Marker',xmark,'MarkerSize',10,'Color',color)
-        hold on
-        ylabel('(dV/dt)/V (1/hr)')
-        xlabel('log fold LB dilution')
-        title(strcat('Population-averaged volume-normalized dV/dt vs log LB dilution, full cycles ONLY'))
         
     end
+    ylabel(strcat('growth rate: (',specificGrowthRate',')'))
+    xlabel('log fold LB dilution')
+    title(strcat('Population-averaged growth rate vs log LB dilution, full cycles ONLY'))
+    axis([-10,1,xmin,xmax])
      
 end
