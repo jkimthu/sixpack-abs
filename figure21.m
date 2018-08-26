@@ -276,10 +276,20 @@ for e = 1:numExperiments;
         
         
         % plot growth rate data, labeled by stable vs fluc
-        figure(1)
+        
+        figure(1) % sem
         % NOTE: dividing by natural log(2) should only happen for log calculation
         %       of growth rate !
         errorbar(log(concentration(c)), experiment_gr_data{c}.mean/log(2), experiment_gr_data{c}.sem/log(2),'Color',color);
+        hold on
+        plot(log(concentration(c)), experiment_gr_data{c}.mean/log(2),'Marker',xmark,'MarkerSize',10,'Color',color)
+        hold on
+        
+        
+        figure(2) % std
+        % NOTE: dividing by natural log(2) should only happen for log calculation
+        %       of growth rate !
+        errorbar(log(concentration(c)), experiment_gr_data{c}.mean/log(2), experiment_gr_data{c}.std/log(2),'Color',color);
         hold on
         plot(log(concentration(c)), experiment_gr_data{c}.mean/log(2),'Marker',xmark,'MarkerSize',10,'Color',color)
         hold on
