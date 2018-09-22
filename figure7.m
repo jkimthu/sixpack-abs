@@ -24,10 +24,9 @@
 %      13. repeat for all experiments 
 
 
-%  last updated: jen, 2018 September 21
+%  last updated: jen, 2018 September 22
 
-%  commit: edit to reflect base 2 already accounted for in
-%          calculateGrowthRate.m, first used on fresh 2018-02-01 analysis 
+%  commit: base 2 on fresh re-do of 2018-01-31 analysis 
 
          
 
@@ -55,7 +54,7 @@ binsPerHour = 60/specificBinning;
 
 %%
 % 1. create array of experiments of interest, then loop through each:
-exptArray = 15; % use corresponding dataIndex values
+exptArray = 14; % use corresponding dataIndex values
 
 for e = 1:length(exptArray)
     
