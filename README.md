@@ -30,15 +30,15 @@ TABLE of CONTENTS:
 20. monod: growth rate vs nutrient conc		population, all data
 21. monod: growth rate vs nutrient conc		population, full cycles only
 22. growth rate: measured vs expected		population
-23. growth rate vs time, upshift		    population
+23. retired
 
 24. violin plots of growth rate distributions
 25. subsampling growth rates in time bins	
-26. 
+26. pdf of growth rates normalized by pop ave
 27. timescale specific responses in growth rate to upshifts & downshifts
 28. added volume vs birth volume, Taheri	
 29.
-30. % negative growth rates vs time, shifts 
+30. fraction negative growth rates vs time, shifts 
 31. added size vs birth size (normalized by average birth size), trimmed x axis
 32. like 31, but collapsing all curves
 
