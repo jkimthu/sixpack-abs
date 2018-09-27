@@ -36,7 +36,7 @@
 
 
 %  Last edit: jen, 2018 Sept 26
-%  commit: initial commit, pdfs of growth rate for stable and 60 min replicates
+%  commit: pdfs of growth rate for stable and 5 min replicates
 
 
 
@@ -67,7 +67,7 @@ extremes = [-10,12];    % 1/hr
 
 %%
 % 1. create array of experiments of interest, then loop through each:
-exptArray = [13,14,15]; % use corresponding dataIndex values
+exptArray = [5,6,7]; % use corresponding dataIndex values
 
 
 for e = 1:length(exptArray)
@@ -133,12 +133,13 @@ for e = 1:length(exptArray)
             conditionData_bubbleTrimmed = conditionData_fullOnly;
             growthRates_bubbleTrimmed = growthRates;
         end
-        clear timestamps_sec maxTime
+        clear timestamps_sec timestamps_hr maxTime
         
         
         
         % 9. truncate data to stabilized regions
         minTime = 3;
+        timestamps_hr = conditionData_bubbleTrimmed(:,2)/3600; % time in seconds converted to hours
         
         conditionData_fullyTrimmed = conditionData_bubbleTrimmed(timestamps_hr >= minTime,:);
         growthRates_fullyTrimmed = growthRates_bubbleTrimmed(timestamps_hr >= minTime,:);
@@ -263,7 +264,7 @@ for e = 1:length(exptArray)
         legend('fluc','low','ave','high')
         xlabel('gr/<gr>')
         ylabel('pdf')
-        axis([extremes(1) extremes(2) 0 .05])
+        axis([extremes(1) extremes(2) 0 .15])
         
 
     end
