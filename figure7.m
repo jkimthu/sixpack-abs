@@ -24,9 +24,9 @@
 %      13. repeat for all experiments 
 
 
-%  last updated: jen, 2018 September 22
+%  last updated: jen, 2018 September 26
 
-%  commit: base 2 on fresh re-do of 2018-01-31 analysis 
+%  commit: base 2 on fresh re-do of 2018-01-29 analysis, finish 60 min reps 
 
          
 
@@ -54,7 +54,7 @@ binsPerHour = 60/specificBinning;
 
 %%
 % 1. create array of experiments of interest, then loop through each:
-exptArray = 14; % use corresponding dataIndex values
+exptArray = 13; % use corresponding dataIndex values
 
 for e = 1:length(exptArray)
     
@@ -100,11 +100,12 @@ for e = 1:length(exptArray)
         timestamps_sec = conditionData_fullOnly(:,2);  % col 2  = timestamp in seconds
         isDrop = conditionData_fullOnly(:,4);          % col 4  = isDrop, 1 marks a birth event
         curveFinder = conditionData_fullOnly(:,5);     % col 5  = curve finder (ID of curve in condition)
+        trackNum = conditionData_fullOnly(:,20);       % col 20 = track number (not ID from particle tracking)
         
         
         
         % 8. calculate growth rate
-        growthRates = calculateGrowthRate(volumes,timestamps_sec,isDrop,curveFinder);
+        growthRates = calculateGrowthRate(volumes,timestamps_sec,isDrop,curveFinder,trackNum);
 
 
         
@@ -188,7 +189,7 @@ for e = 1:length(exptArray)
         
     end
     
-    % 14. plot growth rate over time
+    % 14. save plots in active folder
     cd('/Users/jen/Documents/StockerLab/Data_analysis/currentPlots/')
     plotName = strcat('figure7-',specificGrowthRate,'-',date,'-',num2str(specificBinning),'minbins');
     saveas(gcf,plotName,'epsc')
