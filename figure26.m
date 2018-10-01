@@ -36,8 +36,8 @@
 
 
 %  Last edit: jen, 2018 Oct 1
-%  commit: pdfs of growth rate for stable and 30 sec replicates
-
+%  commit: pdfs of growth rate for stable and 30 sec replicates, include
+%          subtracted mean
 
 
 
