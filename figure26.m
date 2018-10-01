@@ -1,10 +1,10 @@
 %% figure 26
 
-%  Goal: plot pdfs of growth rates, normalized by population mean.
+%  Goal: plot pdfs of growth rates, raw and normalized.
 
 %        (A) trim data prior to three hours, raw
-%        (B) trim data prior to three hours, normalized
-%
+%        (B) trim data prior to three hours, divide by population mean
+%        (c) trim data prior to three hours, subtract population mean
 
 
 %  Strategy:
@@ -35,8 +35,8 @@
 %
 
 
-%  Last edit: jen, 2018 Sept 26
-%  commit: pdfs of growth rate for stable and 5 min replicates
+%  Last edit: jen, 2018 Oct 1
+%  commit: pdfs of growth rate for stable and 30 sec replicates
 
 
 
@@ -67,7 +67,7 @@ extremes = [-10,12];    % 1/hr
 
 %%
 % 1. create array of experiments of interest, then loop through each:
-exptArray = [5,6,7]; % use corresponding dataIndex values
+exptArray = [2,3,4]; % use corresponding dataIndex values
 
 
 for e = 1:length(exptArray)
@@ -224,6 +224,9 @@ for e = 1:length(exptArray)
         assignedBins_norm = ( ceil( (growthRt_final./gr_mean) * (1/binSize)) );
         assignedBins_norm_shiftup = assignedBins_norm + 1000;
         
+        assignedBins_sub = ( ceil( (growthRt_final-gr_mean) * (1/binSize)) );
+        assignedBins_sub_shiftup = assignedBins_sub + 1000;
+        
         
         
         % 15. calculate pdf, still shifted up 1000
@@ -234,6 +237,10 @@ for e = 1:length(exptArray)
         binned_gr_norm = accumarray(assignedBins_norm_shiftup, assignedBins_norm, [], @(x) {x});
         binCounts_norm = cellfun(@length,binned_gr_norm);
         pdf_gr_norm = binCounts_norm/gr_count;
+        
+        binned_gr_sub = accumarray(assignedBins_sub_shiftup, assignedBins_sub, [], @(x) {x});
+        binCounts_sub = cellfun(@length,binned_gr_sub);
+        pdf_gr_sub = binCounts_sub/gr_count;
         
         
         
@@ -254,17 +261,31 @@ for e = 1:length(exptArray)
         axis([extremes(1) extremes(2) 0 .05])
         
         
-        % normalized by population mean
+        % divided by population mean
         gr_norm = ((1:length(binned_gr_norm))-1000).*binSize;
         
         figure(2)
         plot(gr_norm,pdf_gr_norm,'Color',color,'LineWidth',1)
         hold on
-        title('norm pdf')
+        title('norm pdf, div')
         legend('fluc','low','ave','high')
         xlabel('gr/<gr>')
         ylabel('pdf')
         axis([extremes(1) extremes(2) 0 .15])
+        
+        
+        
+        % subtracted by population mean
+        gr_sub = ((1:length(binned_gr_sub))-1000).*binSize;
+        
+        figure(3)
+        plot(gr_sub,pdf_gr_sub,'Color',color,'LineWidth',1)
+        hold on
+        title('norm pdf, sub')
+        legend('fluc','low','ave','high')
+        xlabel('gr-<gr>')
+        ylabel('pdf')
+        axis([extremes(1) extremes(2) 0 .05])
         
 
     end
@@ -281,10 +302,14 @@ saveas(gcf,plotName,'epsc')
 %close(gcf)
 
 figure(2)
-plotName = strcat('figure26-',num2str(timescale),'-',specificGrowthRate,'-normPDF');
+plotName = strcat('figure26-',num2str(timescale),'-',specificGrowthRate,'-divPDF');
 saveas(gcf,plotName,'epsc')
 %close(gcf)
 
+figure(3)
+plotName = strcat('figure26-',num2str(timescale),'-',specificGrowthRate,'-subPDF');
+saveas(gcf,plotName,'epsc')
+%close(gcf)
 
 
         
