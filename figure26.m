@@ -36,7 +36,7 @@
 
 
 %  Last edit: jen, 2018 Oct 1
-%  commit: pdfs of growth rate for stable and 5 min replicates, include
+%  commit: pdfs of growth rate for stable and 15 min replicates, include
 %          subtracted mean
 
 
@@ -67,7 +67,7 @@ extremes = [-10,12];    % 1/hr
 
 %%
 % 1. create array of experiments of interest, then loop through each:
-exptArray = [5,6,7]; % use corresponding dataIndex values
+exptArray = [9,11,12]; % use corresponding dataIndex values
 
 
 for e = 1:length(exptArray)
