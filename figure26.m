@@ -35,7 +35,7 @@
 %
 
 
-%  Last edit: jen, 2018 Oct 1
+%  Last edit: jen, 2018 Oct 2
 %  commit: pdfs of growth rate for stable and 60 min replicates, include
 %          subtracted mean
 
