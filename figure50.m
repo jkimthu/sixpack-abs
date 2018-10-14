@@ -12,16 +12,16 @@
 
 %  Part B:
 %     1. for all experiments in dataset:
-%           2. collect experiment date and exclude outliers (2017-10-31)
+%           2. collect experiment date
 %           3. initialize experiment meta data
 %           4. load measured data
 %           5. for each condition,
 %                   6. isolate data for current condition
 %                   7. find all tracks that are at least x hours long
 %                   8. plot track volume vs time, overlay with nutrient signal
-%                      note: if number of long tracks exceeds 10, choose 10 at random
+%                      note: if number of long tracks exceeds 5, choose 5 at random
 %                            i. initialize random number generator to make results repeatable
-%                           ii. create vector of 10 random integers drawn from a uniform
+%                           ii. create vector of 5 random integers drawn from a uniform
 %                               distribution between 1 and numLongTracks
 %                   9. isolate data from current long track
 %                  10. isolate volume and timestamp (corrected for signal lag) data of interest
@@ -30,14 +30,13 @@
 %                  13. scale binary nutrient signal
 %                  14. plot
 %          15. repeat for all conditions
-%          16. save figures
-%    17. repeat for all experiments
+%    16. repeat for all experiments
 
 
 %  Last edit: jen, 2018 Oct 14
 
-%  commit: plot and save 10 random individual tracks of 7+ hours from
-%          2018-01-31 experiment
+%  commit: plot and save 5 random individual tracks of 7+ hours from a
+%          given experiment
 
 
 
