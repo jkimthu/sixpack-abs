@@ -24,9 +24,9 @@
 %      13. repeat for all experiments 
 
 
-%  last updated: jen, 2018 September 26
+%  last updated: jen, 2018 October 14
 
-%  commit: base 2 on fresh re-do of 2018-01-29 analysis, finish 60 min reps 
+%  commit: plot 2018-01-31 data within steady region for manuscript figure 2
 
          
 
@@ -51,6 +51,7 @@ prompt = 'Enter specific binning in minutes as double: ';
 specificBinning = input(prompt);
 binsPerHour = 60/specificBinning;
 
+clear prompt
 
 %%
 % 1. create array of experiments of interest, then loop through each:
@@ -173,15 +174,16 @@ for e = 1:length(exptArray)
         palette = {'DodgerBlue','Indigo','GoldenRod','FireBrick'};
         
         color = rgb(palette(condition));
-        xmark = 'o';
+        xmark = '.';
         
         figure(e)
-        errorbar((1:length(bin_means))/binsPerHour,bin_means,bin_sems,'Color',color)
-        hold on
+%         errorbar((1:length(bin_means))/binsPerHour,bin_means,bin_sems,'Color',color)
+%         hold on
         plot((1:length(bin_means))/binsPerHour,bin_means,'Color',color,'Marker',xmark)
         hold on
         grid on
-        axis([0,10.1,xmin,xmax])
+        %axis([0,10.1,xmin,xmax])
+        axis([3,9,xmin,xmax])
         xlabel('Time (hr)')
         ylabel('Growth rate')
         title(strcat(date,': (',specificGrowthRate,')'))
@@ -191,7 +193,7 @@ for e = 1:length(exptArray)
     
     % 14. save plots in active folder
     cd('/Users/jen/Documents/StockerLab/Data_analysis/currentPlots/')
-    plotName = strcat('figure7-',specificGrowthRate,'-',date,'-',num2str(specificBinning),'minbins');
+    plotName = strcat('figure7-',specificGrowthRate,'-',date,'-',num2str(specificBinning),'minbins-trim2steady');
     saveas(gcf,plotName,'epsc')
     
     close(gcf)
