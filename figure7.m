@@ -24,10 +24,9 @@
 %      13. repeat for all experiments 
 
 
-%  last updated: jen, 2018 October 14
+%  last updated: jen, 2018 October 15
 
-%  commit: plot 2018-01-31 data within steady region for manuscript figure 2
-
+%  commit: plot 30 sec, 5 min and 15 min const width data with 30 min bins
          
 
 % OK let's go!
@@ -55,13 +54,13 @@ clear prompt
 
 %%
 % 1. create array of experiments of interest, then loop through each:
-exptArray = 13; % use corresponding dataIndex values
+exptArray = [1:7,9:12]; % use corresponding dataIndex values
 
 for e = 1:length(exptArray)
     
     
     % 2. initialize experiment meta data
-    index = exptArray(e); %dataIndex(e);
+    index = exptArray(e); 
     date = storedMetaData{index}.date;
     expType = storedMetaData{index}.experimentType;
     bubbletime = storedMetaData{index}.bubbletime;
@@ -182,8 +181,8 @@ for e = 1:length(exptArray)
         plot((1:length(bin_means))/binsPerHour,bin_means,'Color',color,'Marker',xmark)
         hold on
         grid on
-        %axis([0,10.1,xmin,xmax])
-        axis([3,9,xmin,xmax])
+        axis([0,10.1,xmin,xmax])
+        %axis([3,9,xmin,xmax])
         xlabel('Time (hr)')
         ylabel('Growth rate')
         title(strcat(date,': (',specificGrowthRate,')'))
