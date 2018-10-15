@@ -16,7 +16,8 @@
 
 % Last edit: jen, 2018 October 15
 
-% Commit: re-create Monod plot with log2 growth rate, not with full curves
+% Commit: test Monod plot with log2 growth rate, using data only within
+%         full curves. first go with constant width 1p7 data
  
 
 
@@ -88,36 +89,36 @@ for e = 1:length(exptArray)
         conditionData = exptData(exptData(:,21) == c,:); % col 21 = condition vals
         
         % 4. trim data to full cell cycles ONLY
-        %curveFinder = conditionData(:,5);        % col 5 = curveFinder, ID of full cell cycles
-        %conditionData_fullOnly = conditionData(curveFinder > 0,:);
-        %clear curveFinder
+        curveFinder = conditionData(:,5);        % col 5 = curveFinder, ID of full cell cycles
+        conditionData_fullOnly = conditionData(curveFinder > 0,:);
+        clear curveFinder
         
         
-        % 6. isolate volume (Va), dVdt and timestamp data from current condition
-        volumes = conditionData(:,11);        % col 11 = calculated va_vals (cubic um)
-        timestamps_sec = conditionData(:,2);  % col 2  = timestamp in seconds
-        isDrop = conditionData(:,4);          % col 4  = isDrop, 1 marks a birth event
-        curveFinder = conditionData(:,5);     % col 5  = curve finder (ID of curve in condition)
-        trackNum = conditionData(:,20);       % col 20 = track number (not ID from particle tracking)
+        % 5. isolate volume (Va), dVdt and timestamp data from current condition
+        volumes = conditionData_fullOnly(:,11);        % col 11 = calculated va_vals (cubic um)
+        timestamps_sec = conditionData_fullOnly(:,2);  % col 2  = timestamp in seconds
+        isDrop = conditionData_fullOnly(:,4);          % col 4  = isDrop, 1 marks a birth event
+        curveFinder = conditionData_fullOnly(:,5);     % col 5  = curve finder (ID of curve in condition)
+        trackNum = conditionData_fullOnly(:,20);       % col 20 = track number (not ID from particle tracking)
         
         
-        % 7. calculate growth rate
+        % 6. calculate growth rate
         growthRates = calculateGrowthRate(volumes,timestamps_sec,isDrop,curveFinder,trackNum);
         
         
         
         
-        % 8. isolate data to stabilized regions of growth
+        % 7. isolate data to stabilized regions of growth
         %    NOTE: errors (excessive negative growth rates) occur at trimming
         %          point if growth rate calculation occurs AFTER time trim.
 
         minTime = 3;  % hr
         maxTime = floor(storedMetaData{index}.bubbletime(c)); % limit analysis to whole integer # of periods
-        timestamps_hr = conditionData(:,2)/3600; % time in seconds converted to hours
+        timestamps_hr = conditionData_fullOnly(:,2)/3600; % time in seconds converted to hours
         
         % trim to minumum
         times_trim1 = timestamps_hr(timestamps_hr >= minTime);
-        conditionData_trim1 = conditionData(timestamps_hr >= minTime,:);
+        conditionData_trim1 = conditionData_fullOnly(timestamps_hr >= minTime,:);
         growthRates_trim1 = growthRates(timestamps_hr >= minTime,:);
         
         % trim to maximum
@@ -133,7 +134,7 @@ for e = 1:length(exptArray)
         
         
         
-        % 9. isolate selected specific growth rate
+        % 8. isolate selected specific growth rate
         if strcmp(specificGrowthRate,'raw') == 1
             specificColumn = 1;         % for selecting appropriate column in growthRates
         elseif strcmp(specificGrowthRate,'norm') == 1
@@ -148,7 +149,7 @@ for e = 1:length(exptArray)
 
         
         
-        % 10. calculate average and s.e.m. of stabilized data        
+        % 9. calculate average and s.e.m. of stabilized data        
         mean_growthRate = nanmean(growthRt);
         count_growthRate = length(growthRt(~isnan(growthRt)));
         std_growthRate = nanstd(growthRt);
@@ -167,8 +168,8 @@ for e = 1:length(exptArray)
     
     
     % 11. store data from all conditions into measured data structure        
-    %growthRateData_fullOnly{index} = compiled_growthRate;
-    growthRateData{index} = compiled_growthRate;
+    growthRateData_fullOnly{index} = compiled_growthRate;
+    %growthRateData{index} = compiled_growthRate;
     clear compiled_growthRate 
     
 end
@@ -176,9 +177,9 @@ end
 
 %% 11. Save new data into stored data structure
 cd('/Users/jen/Documents/StockerLab/Writing/manuscript 1/figure2')
-%save(strcat('growthRateData_fullOnly_',specificGrowthRate,'.mat'),'growthRateData_fullOnly','specificGrowthRate')
+save(strcat('growthRateData_fullOnly_',specificGrowthRate,'.mat'),'growthRateData_fullOnly','specificGrowthRate')
 
-save(strcat('growthRateData_',specificGrowthRate,'.mat'),'growthRateData','specificGrowthRate')
+%save(strcat('growthRateData_',specificGrowthRate,'.mat'),'growthRateData','specificGrowthRate')
 
 %% 12. plot growth rate over nutrient concentration
 clc
@@ -187,8 +188,8 @@ clear
 cd('/Users/jen/Documents/StockerLab/Data_analysis/')
 load('storedMetaData.mat')
 cd('/Users/jen/Documents/StockerLab/Writing/manuscript 1/figure2')
-%load('growthRateData_fullOnly_log2.mat')
-load('growthRateData_log2.mat')
+load('growthRateData_fullOnly_log2.mat')
+%load('growthRateData_log2.mat')
 
 exptArray = [2:4,5:7,9,11,12,13,14,15,17,18]; % list experiments by index
 
@@ -212,7 +213,8 @@ for e = 1:length(exptArray)
         continue
     end
     
-    if isempty(growthRateData{index}) == 1
+    %if isempty(growthRateData{index}) == 1
+    if isempty(growthRateData_fullOnly{index}) == 1    
         disp(strcat(date, ': empty, skipped!'))
         continue
     else
@@ -223,7 +225,8 @@ for e = 1:length(exptArray)
     timescale = storedMetaData{index}.timescale;
     
     % isolate growth rate data for current experiment
-    experiment_gr_data = growthRateData{index};
+    %experiment_gr_data = growthRateData{index};
+    experiment_gr_data = growthRateData_fullOnly{index};
     
     % isolate concentration data for current experiment
     concentration = storedMetaData{index}.concentrations;
