@@ -24,9 +24,9 @@
 %      13. repeat for all experiments 
 
 
-%  last updated: jen, 2018 October 15
+%  last updated: jen, 2018 October 16
 
-%  commit: plot 30 sec, 5 min and 15 min const width data with 30 min bins
+%  commit: plot 2018-06-15 with both particle tracking datasets: varied vs constant width threshold
          
 
 % OK let's go!
@@ -54,13 +54,13 @@ clear prompt
 
 %%
 % 1. create array of experiments of interest, then loop through each:
-exptArray = [1:7,9:12]; % use corresponding dataIndex values
+exptArray = 21; % use corresponding dataIndex values
 
 for e = 1:length(exptArray)
     
     
     % 2. initialize experiment meta data
-    index = exptArray(e); 
+    index = exptArray(e);
     date = storedMetaData{index}.date;
     expType = storedMetaData{index}.experimentType;
     bubbletime = storedMetaData{index}.bubbletime;
@@ -71,133 +71,143 @@ for e = 1:length(exptArray)
     
     
     % 3. load measured experiment data
-    experimentFolder = strcat('/Users/jen/Documents/StockerLab/Data/LB/',date);
-    cd(experimentFolder)
-    filename = strcat('lb-fluc-',date,'-width1p7-jiggle-0p5.mat');
-    load(filename,'D5','T');
-    
-    
-    
-    % 5. build data matrix from specified condition
-    for condition = 1:length(bubbletime)
-    
-        xy_start = storedMetaData{index}.xys(condition,1);
-        xy_end = storedMetaData{index}.xys(condition,end);
-        conditionData = buildDM(D5, T, xy_start, xy_end,index,expType);
+    for wthresh = 1:2
         
-        
-        
-        % 6. isolate condition data to those with full cell cycles
-        curveIDs = conditionData(:,5);           % col 5 = curve ID
-        conditionData_fullOnly = conditionData(curveIDs > 0,:);
-        clear curveFinder
-        
-        
-  
-        
-        % 7. isolate volume (Va), timestamp, mu, drop and curveID data
-        volumes = conditionData_fullOnly(:,11);        % col 11 = calculated va_vals (cubic um)
-        timestamps_sec = conditionData_fullOnly(:,2);  % col 2  = timestamp in seconds
-        isDrop = conditionData_fullOnly(:,4);          % col 4  = isDrop, 1 marks a birth event
-        curveFinder = conditionData_fullOnly(:,5);     % col 5  = curve finder (ID of curve in condition)
-        trackNum = conditionData_fullOnly(:,20);       % col 20 = track number (not ID from particle tracking)
-        
-        
-        
-        % 8. calculate growth rate
-        growthRates = calculateGrowthRate(volumes,timestamps_sec,isDrop,curveFinder,trackNum);
-
-
-        
-        
-        % 9. truncate data to non-erroneous (e.g. bubbles) timestamps
-        maxTime = bubbletime(condition);
-        timestamps_hr = conditionData_fullOnly(:,2)/3600; % time in seconds converted to hours
-        
-        if maxTime > 0
-            conditionData_bubbleTrimmed = conditionData_fullOnly(timestamps_hr <= maxTime,:);
-            growthRates_bubbleTrimmed = growthRates(timestamps_hr <= maxTime,:);
+        experimentFolder = strcat('/Users/jen/Documents/StockerLab/Data/LB/',date);
+        cd(experimentFolder)
+        if wthresh == 1
+            filename = strcat('lb-fluc-',date,'-c123-width1p4-c4-1p7-jiggle-0p5.mat');
         else
-            conditionData_bubbleTrimmed = conditionData_fullOnly;
-            growthRates_bubbleTrimmed = growthRates;
+            filename = strcat('lb-fluc-',date,'-width1p7-jiggle-0p5.mat');
         end
-        clear timestamps_hr timestamps_sec maxTime
+        load(filename,'D5','T');
         
         
         
-        
-        % 10. bin growth rate into time bins based on timestamp
-        timeInHours = conditionData_bubbleTrimmed(:,2)/3600;
-        bins = ceil(timeInHours*binsPerHour);
-        %binVector = linspace(1,binsPerHour*10,binsPerHour*10);
-        
-        
-        
-        % 11. isolate selected specific growth rate and remove nans from data analysis
-        if strcmp(specificGrowthRate,'raw') == 1
-            specificColumn = 1;         % for selecting appropriate column in growthRates
-            xmin = -5;                  % lower limit for plotting x axis
-            xmax = 25;                  % upper limit for plotting x axis
-        elseif strcmp(specificGrowthRate,'norm') == 1
-            specificColumn = 2;
-            xmin = -1;
-            xmax = 5;
-        elseif strcmp(specificGrowthRate,'log2') == 1
-            specificColumn = 3;
-            xmin = -1;
-            xmax = 5;
-        elseif strcmp(specificGrowthRate,'lognorm') == 1
-            specificColumn = 4;
-            xmin = -0.5;
-            xmax = 1;
+        % 5. build data matrix from specified condition
+        for condition = 1:length(bubbletime)
+            
+            xy_start = storedMetaData{index}.xys(condition,1);
+            xy_end = storedMetaData{index}.xys(condition,end);
+            conditionData = buildDM(D5, T, xy_start, xy_end,index,expType);
+            
+            
+            
+            % 6. isolate condition data to those with full cell cycles
+            curveIDs = conditionData(:,5);           % col 5 = curve ID
+            conditionData_fullOnly = conditionData(curveIDs > 0,:);
+            clear curveFinder
+            
+            
+            
+            
+            % 7. isolate volume (Va), timestamp, mu, drop and curveID data
+            volumes = conditionData_fullOnly(:,11);        % col 11 = calculated va_vals (cubic um)
+            timestamps_sec = conditionData_fullOnly(:,2);  % col 2  = timestamp in seconds
+            isDrop = conditionData_fullOnly(:,4);          % col 4  = isDrop, 1 marks a birth event
+            curveFinder = conditionData_fullOnly(:,5);     % col 5  = curve finder (ID of curve in condition)
+            trackNum = conditionData_fullOnly(:,20);       % col 20 = track number (not ID from particle tracking)
+            
+            
+            
+            % 8. calculate growth rate
+            growthRates = calculateGrowthRate(volumes,timestamps_sec,isDrop,curveFinder,trackNum);
+            
+            
+            
+            
+            % 9. truncate data to non-erroneous (e.g. bubbles) timestamps
+            maxTime = bubbletime(condition);
+            timestamps_hr = conditionData_fullOnly(:,2)/3600; % time in seconds converted to hours
+            
+            if maxTime > 0
+                conditionData_bubbleTrimmed = conditionData_fullOnly(timestamps_hr <= maxTime,:);
+                growthRates_bubbleTrimmed = growthRates(timestamps_hr <= maxTime,:);
+            else
+                conditionData_bubbleTrimmed = conditionData_fullOnly;
+                growthRates_bubbleTrimmed = growthRates;
+            end
+            clear timestamps_hr timestamps_sec maxTime
+            
+            
+            
+            
+            % 10. bin growth rate into time bins based on timestamp
+            timeInHours = conditionData_bubbleTrimmed(:,2)/3600;
+            bins = ceil(timeInHours*binsPerHour);
+            %binVector = linspace(1,binsPerHour*10,binsPerHour*10);
+            
+            
+            
+            % 11. isolate selected specific growth rate and remove nans from data analysis
+            if strcmp(specificGrowthRate,'raw') == 1
+                specificColumn = 1;         % for selecting appropriate column in growthRates
+                xmin = -5;                  % lower limit for plotting x axis
+                xmax = 25;                  % upper limit for plotting x axis
+            elseif strcmp(specificGrowthRate,'norm') == 1
+                specificColumn = 2;
+                xmin = -1;
+                xmax = 5;
+            elseif strcmp(specificGrowthRate,'log2') == 1
+                specificColumn = 3;
+                xmin = -1;
+                xmax = 5;
+            elseif strcmp(specificGrowthRate,'lognorm') == 1
+                specificColumn = 4;
+                xmin = -0.5;
+                xmax = 1;
+            end
+            
+            %growthRt = growthRates(:,specificColumn);
+            growthRt = growthRates_bubbleTrimmed(:,specificColumn);
+            
+            growthRt_noNaNs = growthRt(~isnan(growthRt),:);
+            bins_noNaNs = bins(~isnan(growthRt),:);
+            
+            
+            
+            % 12. calculate mean, standard dev, counts, and standard error
+            binned_growthRt = accumarray(bins_noNaNs,growthRt_noNaNs,[],@(x) {x});
+            bin_means = cellfun(@mean,binned_growthRt);
+            bin_stds = cellfun(@std,binned_growthRt);
+            bin_counts = cellfun(@length,binned_growthRt);
+            bin_sems = bin_stds./sqrt(bin_counts);
+            
+            
+            
+            % 13. plot growth rate over time
+            palette = {'DodgerBlue','Indigo','GoldenRod','FireBrick'};
+            
+            if wthresh == 1
+                color = rgb(palette(condition));
+            else
+                color = rgb(palette(condition)) * 0.2;
+            end
+            xmark = '.';
+            
+            figure(e)
+            %         errorbar((1:length(bin_means))/binsPerHour,bin_means,bin_sems,'Color',color)
+            %         hold on
+            plot((1:length(bin_means))/binsPerHour,bin_means,'Color',color,'Marker',xmark)
+            hold on
+            grid on
+            axis([0,10.1,xmin,xmax])
+            %axis([3,9,xmin,xmax])
+            xlabel('Time (hr)')
+            ylabel('Growth rate')
+            title(strcat(date,': (',specificGrowthRate,')'))
+            
         end
-        
-        %growthRt = growthRates(:,specificColumn);
-        growthRt = growthRates_bubbleTrimmed(:,specificColumn);
-        
-        growthRt_noNaNs = growthRt(~isnan(growthRt),:);
-        bins_noNaNs = bins(~isnan(growthRt),:);
-        
-        
-        
-        % 12. calculate mean, standard dev, counts, and standard error
-        binned_growthRt = accumarray(bins_noNaNs,growthRt_noNaNs,[],@(x) {x});
-        bin_means = cellfun(@mean,binned_growthRt);
-        bin_stds = cellfun(@std,binned_growthRt);
-        bin_counts = cellfun(@length,binned_growthRt);
-        bin_sems = bin_stds./sqrt(bin_counts);
-       
-       
-        
-        % 13. plot growth rate over time
-        palette = {'DodgerBlue','Indigo','GoldenRod','FireBrick'};
-        
-        color = rgb(palette(condition));
-        xmark = '.';
-        
-        figure(e)
-%         errorbar((1:length(bin_means))/binsPerHour,bin_means,bin_sems,'Color',color)
-%         hold on
-        plot((1:length(bin_means))/binsPerHour,bin_means,'Color',color,'Marker',xmark)
-        hold on
-        grid on
-        axis([0,10.1,xmin,xmax])
-        %axis([3,9,xmin,xmax])
-        xlabel('Time (hr)')
-        ylabel('Growth rate')
-        title(strcat(date,': (',specificGrowthRate,')'))
-        
-        
     end
     
     % 14. save plots in active folder
-    cd('/Users/jen/Documents/StockerLab/Data_analysis/currentPlots/')
-    plotName = strcat('figure7-',specificGrowthRate,'-',date,'-',num2str(specificBinning),'minbins-trim2steady');
-    saveas(gcf,plotName,'epsc')
+    %cd('/Users/jen/Documents/StockerLab/Data_analysis/currentPlots/')
+    %plotName = strcat('figure7-',specificGrowthRate,'-',date,'-',num2str(specificBinning),'minbins');
+    %saveas(gcf,plotName,'epsc')
     
-    close(gcf)
+    %close(gcf)
     
-% 15. repeat for all experiments 
+    % 15. repeat for all experiments
 end
 
 
