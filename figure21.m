@@ -14,11 +14,10 @@
 %       5. call data from structures for plotting
 
 
-% Last edit: jen, 2018 October 15
+% Last edit: jen, 2018 October 16
 
-% Commit: test Monod plot with log2 growth rate, using data only within
-%         full curves. first go with constant width 1p7 data
- 
+% Commit: return to Monod with varied width data, but without full curves
+%         and new bubble times
 
 
 % OK let's go!
@@ -43,9 +42,9 @@ growthRateData = cell(size(storedMetaData));
 
 %%
 % 1. for each experiment, move to folder and load data
-exptArray = [2:4,5:7,9,11,12,13,14,15,17,18]; % list experiments by index
+exptArray = [2:4,5:7,9,10,11,12,13,14,15,17,18]; % list experiments by index
 
-for e = 1:length(exptArray)     
+for e = 14:length(exptArray)     
     
     % identify experiment by date
     index = exptArray(e);
@@ -59,14 +58,17 @@ for e = 1:length(exptArray)
     
     
     % load data
-    if ischar(timescale) == 0
-        filename = strcat('lb-fluc-',date,'-width1p7-jiggle-0p5.mat');
-    elseif strcmp(timescale,'monod') == 1
-        filename = strcat('lb-monod-',date,'-width1p7-jiggle-0p5.mat');
-    %elseif strcmp(date, '2017-11-09') == 1
-    %    filename = 'lb-control-2017-11-09-window5-width1p4-jiggle-0p5.mat';
+    if strcmp(date,'2017-11-12') == 1
+        filename = 'lb-fluc-2017-11-12-width1p4-jiggle-0p5.mat';
+    elseif ischar(timescale) == 0
+        filename = strcat('lb-fluc-',date,'-c123-width1p4-c4-1p7-jiggle-0p5.mat');
+    elseif strcmp(date,'2017-09-26') == 1
+        filename = 'lb-monod-2017-09-26-jiggle-c12-0p1-c3456-0p5-bigger1p8.mat';
+    elseif strcmp(date, '2017-11-09') == 1
+        filename = 'lb-control-2017-11-09-width1p4-jiggle-0p5.mat';
     end
     load(filename,'D5','T')
+    
     
     % build experiment data matrix
     display(strcat('Experiment (', num2str(e),') of (', num2str(length(exptArray)),')'))
@@ -89,17 +91,17 @@ for e = 1:length(exptArray)
         conditionData = exptData(exptData(:,21) == c,:); % col 21 = condition vals
         
         % 4. trim data to full cell cycles ONLY
-        curveFinder = conditionData(:,5);        % col 5 = curveFinder, ID of full cell cycles
-        conditionData_fullOnly = conditionData(curveFinder > 0,:);
-        clear curveFinder
+        %curveFinder = conditionData(:,5);        % col 5 = curveFinder, ID of full cell cycles
+        %conditionData_fullOnly = conditionData(curveFinder > 0,:);
+        %clear curveFinder
         
         
         % 5. isolate volume (Va), dVdt and timestamp data from current condition
-        volumes = conditionData_fullOnly(:,11);        % col 11 = calculated va_vals (cubic um)
-        timestamps_sec = conditionData_fullOnly(:,2);  % col 2  = timestamp in seconds
-        isDrop = conditionData_fullOnly(:,4);          % col 4  = isDrop, 1 marks a birth event
-        curveFinder = conditionData_fullOnly(:,5);     % col 5  = curve finder (ID of curve in condition)
-        trackNum = conditionData_fullOnly(:,20);       % col 20 = track number (not ID from particle tracking)
+        volumes = conditionData(:,11);        % col 11 = calculated va_vals (cubic um)
+        timestamps_sec = conditionData(:,2);  % col 2  = timestamp in seconds
+        isDrop = conditionData(:,4);          % col 4  = isDrop, 1 marks a birth event
+        curveFinder = conditionData(:,5);     % col 5  = curve finder (ID of curve in condition)
+        trackNum = conditionData(:,20);       % col 20 = track number (not ID from particle tracking)
         
         
         % 6. calculate growth rate
@@ -114,11 +116,11 @@ for e = 1:length(exptArray)
 
         minTime = 3;  % hr
         maxTime = floor(storedMetaData{index}.bubbletime(c)); % limit analysis to whole integer # of periods
-        timestamps_hr = conditionData_fullOnly(:,2)/3600; % time in seconds converted to hours
+        timestamps_hr = conditionData(:,2)/3600; % time in seconds converted to hours
         
         % trim to minumum
         times_trim1 = timestamps_hr(timestamps_hr >= minTime);
-        conditionData_trim1 = conditionData_fullOnly(timestamps_hr >= minTime,:);
+        conditionData_trim1 = conditionData(timestamps_hr >= minTime,:);
         growthRates_trim1 = growthRates(timestamps_hr >= minTime,:);
         
         % trim to maximum
@@ -168,8 +170,8 @@ for e = 1:length(exptArray)
     
     
     % 11. store data from all conditions into measured data structure        
-    growthRateData_fullOnly{index} = compiled_growthRate;
-    %growthRateData{index} = compiled_growthRate;
+    %growthRateData_fullOnly{index} = compiled_growthRate;
+    growthRateData{index} = compiled_growthRate;
     clear compiled_growthRate 
     
 end
@@ -177,9 +179,9 @@ end
 
 %% 11. Save new data into stored data structure
 cd('/Users/jen/Documents/StockerLab/Writing/manuscript 1/figure2')
-save(strcat('growthRateData_fullOnly_',specificGrowthRate,'.mat'),'growthRateData_fullOnly','specificGrowthRate')
+%save(strcat('growthRateData_fullOnly_',specificGrowthRate,'.mat'),'growthRateData_fullOnly','specificGrowthRate')
 
-%save(strcat('growthRateData_',specificGrowthRate,'.mat'),'growthRateData','specificGrowthRate')
+save(strcat('growthRateData_',specificGrowthRate,'.mat'),'growthRateData','specificGrowthRate')
 
 %% 12. plot growth rate over nutrient concentration
 clc
@@ -188,10 +190,10 @@ clear
 cd('/Users/jen/Documents/StockerLab/Data_analysis/')
 load('storedMetaData.mat')
 cd('/Users/jen/Documents/StockerLab/Writing/manuscript 1/figure2')
-load('growthRateData_fullOnly_log2.mat')
-%load('growthRateData_log2.mat')
+%load('growthRateData_fullOnly_log2.mat')
+load('growthRateData_log2.mat')
 
-exptArray = [2:4,5:7,9,11,12,13,14,15,17,18]; % list experiments by index
+exptArray = [2:4,5:7,9,10,11,12,13,14,15,17,18]; % list experiments by index
 
 
 %%
@@ -213,8 +215,8 @@ for e = 1:length(exptArray)
         continue
     end
     
-    %if isempty(growthRateData{index}) == 1
-    if isempty(growthRateData_fullOnly{index}) == 1    
+    if isempty(growthRateData{index}) == 1
+    %if isempty(growthRateData_fullOnly{index}) == 1    
         disp(strcat(date, ': empty, skipped!'))
         continue
     else
@@ -225,8 +227,8 @@ for e = 1:length(exptArray)
     timescale = storedMetaData{index}.timescale;
     
     % isolate growth rate data for current experiment
-    %experiment_gr_data = growthRateData{index};
-    experiment_gr_data = growthRateData_fullOnly{index};
+    experiment_gr_data = growthRateData{index};
+    %experiment_gr_data = growthRateData_fullOnly{index};
     
     % isolate concentration data for current experiment
     concentration = storedMetaData{index}.concentrations;
@@ -289,6 +291,6 @@ for e = 1:length(exptArray)
     ylabel(strcat('growth rate: (',specificGrowthRate',')'))
     xlabel('log fold LB dilution')
     title(strcat('Population-averaged growth rate vs log LB dilution'))
-    axis([-10,-1,ymin,ymax])
+    axis([-10,0,ymin,ymax])
      
 end
