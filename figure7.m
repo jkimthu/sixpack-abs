@@ -54,7 +54,7 @@ clear prompt
 
 %%
 % 1. create array of experiments of interest, then loop through each:
-exptArray = 17; % use corresponding dataIndex values
+exptArray = [2:7,9:15,17,18]; % use corresponding dataIndex values
 
 for e = 1:length(exptArray)
     
@@ -214,6 +214,7 @@ for e = 1:length(exptArray)
     
     close(gcf)
     
+    clc
     % 15. repeat for all experiments
 end
 
