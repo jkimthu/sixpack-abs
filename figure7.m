@@ -26,7 +26,8 @@
 
 %  last updated: jen, 2018 October 16
 
-%  commit: plot various particle tracking and trimmings of 2017-09-26 data
+%  commit: plot cropped versions of single upshift and downshift data,
+%          2018-08-01 and 2018-08-08
 
 
 % OK let's go!
@@ -54,7 +55,7 @@ clear prompt
 
 %%
 % 1. create array of experiments of interest, then loop through each:
-exptArray = [2:7,9:15,17,18]; % use corresponding dataIndex values
+exptArray = [22,26]; % use corresponding dataIndex values
 
 for e = 1:length(exptArray)
     
@@ -85,7 +86,8 @@ for e = 1:length(exptArray)
         %filename = 'lb-monod-2017-09-26-c123-width1p7-c456-width1p4-jiggle-0p5.mat';
         filename = 'lb-monod-2017-09-26-jiggle-c12-0p1-c3456-0p5-bigger1p8.mat';
     else
-        filename = strcat('lb-fluc-',date,'-c123-width1p4-c4-1p7-jiggle-0p5.mat');
+        %filename = strcat('lb-fluc-',date,'-c123-width1p4-c4-1p7-jiggle-0p5.mat');
+        filename = strcat('lb-fluc-',date,'-width1p7-jiggle-0p5.mat');
     end
     load(filename,'D5','T');
     
@@ -198,8 +200,8 @@ for e = 1:length(exptArray)
         plot((1:length(bin_means))/binsPerHour,bin_means,'Color',color,'Marker',xmark)
         hold on
         grid on
-        axis([0,10.1,xmin,xmax])
-        %axis([3,9,xmin,xmax])
+        %axis([0,10.1,xmin,xmax])
+        axis([1.8,8.2,-0.1,3.4])
         xlabel('Time (hr)')
         ylabel('Growth rate')
         title(strcat(date,': (',specificGrowthRate,')'))
@@ -208,11 +210,11 @@ for e = 1:length(exptArray)
     end
     
     % 14. save plots in active folder
-    cd('/Users/jen/Documents/StockerLab/Data_analysis/currentPlots/')
-    plotName = strcat('figure7-',specificGrowthRate,'-',date,'-',num2str(specificBinning),'minbins-variedWidth-constjiggle-allNOTonlyFull');
-    saveas(gcf,plotName,'epsc')
+    %cd('/Users/jen/Documents/StockerLab/Data_analysis/currentPlots/')
+    %plotName = strcat('figure7-',specificGrowthRate,'-',date,'-',num2str(specificBinning),'minbins-variedWidth-constjiggle-allNOTonlyFull');
+    %saveas(gcf,plotName,'epsc')
     
-    close(gcf)
+    %close(gcf)
     
     clc
     % 15. repeat for all experiments
