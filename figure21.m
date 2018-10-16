@@ -16,8 +16,8 @@
 
 % Last edit: jen, 2018 October 16
 
-% Commit: return to Monod with varied width data, but without full curves
-%         and new bubble times
+% Commit: add variant of monod which beeswarms clusters of very similar
+%         points
 
 
 % OK let's go!
@@ -200,8 +200,8 @@ exptArray = [2:4,5:7,9,10,11,12,13,14,15,17,18]; % list experiments by index
 
 % initialize colors
 palette = {'FireBrick','Chocolate','ForestGreen','Amethyst','MidnightBlue'};
-shapes = {'o','x','square','*'};
-%shapes = {'o','o','o','o'};
+%shapes = {'o','x','square','*'};
+shapes = {'o','o','o','o'};
 
 for e = 1:length(exptArray)
     
@@ -243,7 +243,7 @@ for e = 1:length(exptArray)
             xmax = 5;
         elseif strcmp(specificGrowthRate,'log2') == 1
             ymin = 0;
-            ymax = 3.9;
+            ymax = 4.1;
         elseif strcmp(specificGrowthRate,'lognorm') == 1
             xmin = -0.5;
             xmax = 1;
@@ -291,6 +291,147 @@ for e = 1:length(exptArray)
     ylabel(strcat('growth rate: (',specificGrowthRate',')'))
     xlabel('log fold LB dilution')
     title(strcat('Population-averaged growth rate vs log LB dilution'))
-    axis([-10,0,ymin,ymax])
+    axis([-10,1,ymin,ymax])
      
 end
+
+%% plot spread
+
+% initialize colors
+palette = {'FireBrick','Chocolate','ForestGreen','Amethyst','MidnightBlue'};
+shapes = {'o','x','square','*'};
+%shapes = {'o','o','o','o'};
+
+
+
+gr_stable = [];
+conc_stable = [];
+condition_stable = [];
+
+gr_30 =[];
+gr_300 = [];
+gr_900 = [];
+gr_3600 = [];
+gr_low = [];
+gr_ave = [];
+gr_high = [];
+gr_notQuiteAve=[];
+
+for e = 1:length(exptArray)
+    
+    % identify experiment by date
+    index = exptArray(e);
+    date = storedMetaData{index}.date;
+    concentration = storedMetaData{index}.concentrations;
+    experimentType = storedMetaData{index}.experimentType;
+    
+    if isempty(growthRateData{index}) == 1
+        %if isempty(growthRateData_fullOnly{index}) == 1
+        disp(strcat(date, ': empty, skipped!'))
+        continue
+    else
+        disp(strcat(date, ': analyze!'))
+    end
+    
+    % load timescale
+    timescale = storedMetaData{index}.timescale;
+    
+    for c = 1:length(concentration)
+        
+        if strcmp(experimentType,'origFluc') == 1
+            
+            if c==1 %if fluc
+                if timescale == 30
+                    gr_30 = [gr_30; growthRateData{index}{c}.mean];
+                elseif timescale == 300
+                    gr_300 = [gr_300; growthRateData{index}{c}.mean];
+                elseif timescale == 900
+                    gr_900 = [gr_900; growthRateData{index}{c}.mean];
+                elseif timescale == 3600
+                    gr_3600 = [gr_3600; growthRateData{index}{c}.mean];
+                end
+            elseif c == 2
+                gr_low = [gr_low; growthRateData{index}{c}.mean];
+            elseif c == 3
+                gr_ave = [gr_ave; growthRateData{index}{c}.mean];
+            elseif c == 4
+                gr_high = [gr_high; growthRateData{index}{c}.mean];
+            end
+            
+        end
+        
+        if strcmp(date,'2017-09-26') == 1
+            if c==1
+                gr_stable{8} = growthRateData{index}{c}.mean;
+            elseif c==2
+                gr_stable{7} = growthRateData{index}{c}.mean;
+            elseif c == 3
+                gr_stable{6} = growthRateData{index}{c}.mean;
+            elseif c == 4
+                gr_notQuiteAve = growthRateData{index}{c}.mean;
+            elseif c == 5
+                gr_low = [gr_low; growthRateData{index}{c}.mean];
+            elseif c == 6
+                gr_stable{1} = growthRateData{index}{c}.mean;
+            end
+        end
+        
+        if strcmp(date,'2017-11-09') == 1
+            gr_notQuiteAve = [gr_notQuiteAve; growthRateData{index}{c}.mean]
+        end
+        
+        %         % isolate growth rate data and condition for current experiment
+        %             gr_stable = [gr_stable; growthRateData{index}{c}.mean];
+        %             gr_high = [gr_high; growthRateData{index}{c}.mean];
+        %             condition_stable = [condition_stable;c];
+        %     % isolate concentration data for current experiment
+        %     conc_stable = [conc_stable; concentration];
+        
+        
+    end
+end
+%%
+
+gr_stable{2} = gr_low;
+gr_stable{3} = gr_notQuiteAve;
+gr_stable{4} = gr_ave;
+gr_stable{5} = gr_high;
+
+gr_fluc_30 = cell(1,8);
+gr_fluc_30{4} = gr_30;
+
+gr_fluc_300 = cell(1,8);
+gr_fluc_300{4} = gr_300;
+
+gr_fluc_900 = cell(1,8);
+gr_fluc_900{4} = gr_900;
+
+gr_fluc_3600 = cell(1,8);
+gr_fluc_3600{4} = gr_3600;
+
+
+plotSpread(gr_stable, ...
+    'xNames', {'1/10000', '1/1000', '1/100','1/95','1/50','1/32','1/8','Full'}, ...
+    'distributionMarkers', {'o', 'o', 'o', 'o', 'o', 'o', 'o', 'o'});
+hold on
+plotSpread(gr_fluc_30, ...
+    'xNames', {'1/10000', '1/1000', '1/100','1/95','1/50','1/32','1/8','Full'}, ...
+    'distributionMarkers', {'o', 'o', 'o', '*', 'o', 'o', 'o', 'o'});
+hold on
+plotSpread(gr_fluc_300, ...
+    'xNames', {'1/10000', '1/1000', '1/100','1/95','1/50','1/32','1/8','Full'}, ...
+    'distributionMarkers', {'o', 'o', 'o', 'sq', 'o', 'o', 'o', 'o'});
+hold on
+plotSpread(gr_fluc_900, ...
+    'xNames', {'1/10000', '1/1000', '1/100','1/95','1/50','1/32','1/8','Full'}, ...
+    'distributionMarkers', {'o', 'o', 'o', 'd', 'o', 'o', 'o', 'o'});
+hold on
+plotSpread(gr_fluc_3600, ...
+    'xNames', {'1/10000', '1/1000', '1/100','1/95','1/50','1/32','1/8','Full'}, ...
+    'distributionMarkers', {'o', 'o', 'o', 'p', 'o', 'o', 'o', 'o'});
+
+%%
+
+title(strcat('Population-averaged growth rate vs LB dilution'))
+ylabel(strcat('growth rate: (',specificGrowthRate',')'))
+xlabel('LB dilution')
