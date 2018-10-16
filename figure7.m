@@ -26,8 +26,8 @@
 
 %  last updated: jen, 2018 October 16
 
-%  commit: plot all fluc and monod experiments analysed with varied widths,
-%          30 min bins
+%  commit: plot various particle tracking and trimmings of 2017-09-26 data
+
 
 % OK let's go!
 
@@ -54,7 +54,7 @@ clear prompt
 
 %%
 % 1. create array of experiments of interest, then loop through each:
-exptArray = [2:7,9:15,17,18]; % use corresponding dataIndex values
+exptArray = 17; % use corresponding dataIndex values
 
 for e = 1:length(exptArray)
     
@@ -81,10 +81,11 @@ for e = 1:length(exptArray)
     elseif strcmp(date,'2017-11-09') == 1
         filename = strcat('lb-control-',date,'-width1p4-jiggle-0p5.mat');
     elseif strcmp(date,'2017-09-26') == 1
-        filename = strcat('lb-monod-',date,'-c123-width1p7-c456-width1p4-jiggle-0p5.mat');
+        %filename = strcat('lb-monod-',date,'-width1p7-jiggle-0p5.mat');
+        %filename = 'lb-monod-2017-09-26-c123-width1p7-c456-width1p4-jiggle-0p5.mat';
+        filename = 'lb-monod-2017-09-26-jiggle-c12-0p1-c3456-0p5-bigger1p8.mat';
     else
         filename = strcat('lb-fluc-',date,'-c123-width1p4-c4-1p7-jiggle-0p5.mat');
-        
     end
     load(filename,'D5','T');
     
@@ -100,19 +101,19 @@ for e = 1:length(exptArray)
         
         
         % 6. isolate condition data to those with full cell cycles
-        curveIDs = conditionData(:,5);           % col 5 = curve ID
-        conditionData_fullOnly = conditionData(curveIDs > 0,:);
-        clear curveFinder
+        %curveIDs = conditionData(:,5);           % col 5 = curve ID
+        %conditionData_fullOnly = conditionData(curveIDs > 0,:);
+        %clear curveFinder
         
         
         
         
         % 7. isolate volume (Va), timestamp, mu, drop and curveID data
-        volumes = conditionData_fullOnly(:,11);        % col 11 = calculated va_vals (cubic um)
-        timestamps_sec = conditionData_fullOnly(:,2);  % col 2  = timestamp in seconds
-        isDrop = conditionData_fullOnly(:,4);          % col 4  = isDrop, 1 marks a birth event
-        curveFinder = conditionData_fullOnly(:,5);     % col 5  = curve finder (ID of curve in condition)
-        trackNum = conditionData_fullOnly(:,20);       % col 20 = track number (not ID from particle tracking)
+        volumes = conditionData(:,11);        % col 11 = calculated va_vals (cubic um)
+        timestamps_sec = conditionData(:,2);  % col 2  = timestamp in seconds
+        isDrop = conditionData(:,4);          % col 4  = isDrop, 1 marks a birth event
+        curveFinder = conditionData(:,5);     % col 5  = curve finder (ID of curve in condition)
+        trackNum = conditionData(:,20);       % col 20 = track number (not ID from particle tracking)
         
         
         
@@ -124,13 +125,13 @@ for e = 1:length(exptArray)
         
         % 9. truncate data to non-erroneous (e.g. bubbles) timestamps
         maxTime = bubbletime(condition);
-        timestamps_hr = conditionData_fullOnly(:,2)/3600; % time in seconds converted to hours
+        timestamps_hr = conditionData(:,2)/3600; % time in seconds converted to hours
         
         if maxTime > 0
-            conditionData_bubbleTrimmed = conditionData_fullOnly(timestamps_hr <= maxTime,:);
+            conditionData_bubbleTrimmed = conditionData(timestamps_hr <= maxTime,:);
             growthRates_bubbleTrimmed = growthRates(timestamps_hr <= maxTime,:);
         else
-            conditionData_bubbleTrimmed = conditionData_fullOnly;
+            conditionData_bubbleTrimmed = conditionData;
             growthRates_bubbleTrimmed = growthRates;
         end
         clear timestamps_hr timestamps_sec maxTime
@@ -208,7 +209,7 @@ for e = 1:length(exptArray)
     
     % 14. save plots in active folder
     cd('/Users/jen/Documents/StockerLab/Data_analysis/currentPlots/')
-    plotName = strcat('figure7-',specificGrowthRate,'-',date,'-',num2str(specificBinning),'minbins-variedWidth');
+    plotName = strcat('figure7-',specificGrowthRate,'-',date,'-',num2str(specificBinning),'minbins-variedWidth-constjiggle-allNOTonlyFull');
     saveas(gcf,plotName,'epsc')
     
     close(gcf)
