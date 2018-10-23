@@ -13,10 +13,9 @@
 
 
 
-%  last updated: jen, 2018 Oct 21
+%  last updated: jen, 2018 Oct 23
 
-%  commit: test and apply sgolay filter over growth response to shift data,
-%          each experiment is handled uniquely
+%  commit: clean up script
 
 
 % OK let's go!
@@ -662,7 +661,7 @@ y = [ybegin; ycenter; yend];
 plot([x y])
 %
 
-%%
+
 
 
 % plot average and standard dev of experimental means
@@ -697,95 +696,4 @@ sd3600 = std(binnedMean_3600,0,2)/log(2);
 sd_shift = std(binnedMean_shift,0,2)/log(2);
 
 
-%% upshift response, average between experimental replicates
-
-figure(3)
-
-% post single upshift
-tsingle = (-10:length(m_shift(single_shiftBins_unique{10})))*timePerBin_min;
-m_single = [m_shift(pre_upshiftBins{10}); m_shift(single_shiftBins_unique{10})];
-sd_single = [sd_shift(pre_upshiftBins{10}); sd_shift(single_shiftBins_unique{10})];
-errorbar(tsingle,m_single,sd_single,'Color',color_single,'LineWidth',1)
-hold on
-
-% 3600
-% concatenate pre-upshift and post shift
-t3600 = (-4:length(m3600(upshiftBins{9})))*timePerBin_min;
-m3600_2plot = [m3600(pre_upshiftBins{9}); m3600(upshiftBins{9})];
-sd3600_2plot = [sd3600(pre_upshiftBins{9}); sd3600(upshiftBins{9})];
-errorbar(t3600,m3600_2plot,sd3600_2plot,'Color',color3600,'LineWidth',1)
-hold on
-
-% 900
-% concatenate pre-upshift and post shift
-t900 = (-4:length(m900(upshiftBins{6})))*timePerBin_min;
-m900_2plot = [m900(pre_upshiftBins{6}); m900(upshiftBins{6})];
-sd900_2plot = [sd900(pre_upshiftBins{6}); sd900(upshiftBins{6})];
-errorbar(t900,m900_2plot,sd900_2plot,'Color',color900,'LineWidth',1)
-hold on
-
-% 300
-% concatenate pre-upshift and post shift
-t300 = (-2:length(m300(upshiftBins{3})))*timePerBin_min;
-m300_2plot = [m300(pre_upshiftBins{3}); m300(upshiftBins{3})];
-sd300_2plot = [sd300(pre_upshiftBins{3}); sd300(upshiftBins{3})];
-errorbar(t300,m300_2plot,sd300_2plot,'Color',color300,'LineWidth',1)
-
-hold on
-
-title(strcat('response to upshift, binned every (',num2str(timePerBin),') sec'))
-xlabel('time (sec)')
-ylabel(strcat('growth rate: (', specificGrowthRate ,'/ln(2))'))
-axis([numPreshiftBins*-1*timePerBin_min,60,0,4])
-
-
-
-
-%% downshift response, average between experimental replicates
- 
-figure(4)
-
-
-% post single upshift
-tsingle = (-10:length(m_shift(single_shiftBins_unique{10})))*timePerBin_min;
-m_single = [m_shift(pre_downshiftBins{10}); m_shift(single_shiftBins_unique{10})];
-sd_single = [sd_shift(pre_downshiftBins{10}); sd_shift(single_shiftBins_unique{10})];
-errorbar(tsingle,m_single,sd_single,'Color',color_single,'LineWidth',1)
-hold on
-
-
-
-% 3600
-% concatenate pre-upshift and post shift
-t3600 = (-4:length(m3600(downshiftBins{9})))*timePerBin_min;
-m3600_2plot = [m3600(pre_downshiftBins{9}); m3600(downshiftBins{9})];
-sd3600_2plot = [sd3600(pre_downshiftBins{9}); sd3600(downshiftBins{9})];
-errorbar(t3600,m3600_2plot,sd3600_2plot,'Color',color3600,'LineWidth',1)
-hold on
-
-
-% 900
-% concatenate pre-upshift and post shift
-t900 = (-4:length(m900(downshiftBins{6})))*timePerBin_min;
-m900_2plot = [m900(pre_downshiftBins{6}); m900(downshiftBins{6})];
-sd900_2plot = [sd900(pre_downshiftBins{6}); sd900(downshiftBins{6})];
-errorbar(t900,m900_2plot,sd900_2plot,'Color',color900,'LineWidth',1)
-hold on
-
-% 300
-% concatenate pre-upshift and post shift
-t300 = (-2:length(m300(downshiftBins{3})))*timePerBin_min;
-m300_2plot = [m300(pre_downshiftBins{3}); m300(downshiftBins{3})];
-sd300_2plot = [sd300(pre_downshiftBins{3}); sd300(downshiftBins{3})];
-errorbar(t300,m300_2plot,sd300_2plot,'Color',color300,'LineWidth',1)
-hold on
-
-title(strcat('response to downshift, binned every (',num2str(timePerBin),') sec'))
-xlabel('time (sec)')
-ylabel(strcat('growth rate: (', specificGrowthRate ,')'))
-axis([numPreshiftBins*-1*timePerBin_min,60,-1,3.5])
-
-
-%%
-
-
+%% 
