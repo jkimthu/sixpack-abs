@@ -27,8 +27,9 @@
 
 
 
-%  Last edit: Jen Nguyen, 2018 Aug 26
-%  Commit: edit for interchangeable growth rate metrics 
+%  Last edit: Jen Nguyen, 2018 Oct 23
+%  Commit: use all data, not only full cell cycles. current expectations
+%          plot in manuscript as of commit date
 
 
 
@@ -125,23 +126,24 @@ clc
 
 cd('/Users/jen/Documents/StockerLab/Data_analysis/')
 load('storedMetaData.mat')
-load('growthRateData_fullOnly_log_wholeInteger.mat') % this data uses instantaneous points present after 3hrs, from full curves only
-                                                     % only whole integer hours are used to calculate stats
-                                                     % units = 1/hr, not yet divided by ln(2)
-                                                     % datasets are generated and saved in figure21.m script
+cd('/Users/jen/Documents/StockerLab/Writing/manuscript 1/figure2')
+load('growthRateData_log2.mat') % this data uses instantaneous points present after 3hrs
+                                % only whole integer hours are used to calculate stats
+                                % units = 1/hr
+                                % datasets are generated and saved in figure21.m script
 
 
 % 0. initialize summary vectors for data
-dataIndex = find(~cellfun(@isempty,storedMetaData));
-numExperiments = 16;
+exptArray = [2:4,5:7,9,10,11,12,13,14,15,17,18]; % list experiments by index
 
 
+%%
 % 1. for each experiment, collect values of G_low and G_high
 counter = 0;
-for e = 1:numExperiments
+for e = 1:length(exptArray)
     
     % identify experiment by date
-    index = dataIndex(e);
+    index = exptArray(e);
     date = storedMetaData{index}.date;
     timescale = storedMetaData{index}.timescale;
     
@@ -162,10 +164,10 @@ for e = 1:numExperiments
     high = 4;
     
     % growth rate data
-    flucRates(counter,fluc) = growthRateData_fullOnly{index}{1,fluc}.mean/log(2);
-    stableRates(counter,low) = growthRateData_fullOnly{index}{1,low}.mean/log(2);
-    stableRates(counter,ave) = growthRateData_fullOnly{index}{1,ave}.mean/log(2);
-    stableRates(counter,high) = growthRateData_fullOnly{index}{1,high}.mean/log(2);
+    flucRates(counter,fluc) = growthRateData{index}{1,fluc}.mean/log(2);
+    stableRates(counter,low) = growthRateData{index}{1,low}.mean/log(2);
+    stableRates(counter,ave) = growthRateData{index}{1,ave}.mean/log(2);
+    stableRates(counter,high) = growthRateData{index}{1,high}.mean/log(2);
     
     timescales_perG(counter) = timescale;
     dates_perG{counter} = date;
@@ -239,7 +241,7 @@ ylabel('mean d(logV)/(dt*ln(2)), normalized by G_jensens')
 
 
 
-% dVdt normalized by initial vol, normalized by G_monod
+% growth rate normalized by initial vol, normalized by G_monod
 figure(4)
 plot([1 2 3 4],Gfluc_means./G_monod,'o','Color',rgb('DarkTurquoise'),'MarkerSize',10,'LineWidth',2);
 hold on
@@ -260,3 +262,5 @@ G_monod
 G_jensens
 Gfluc_means
 Gfluc_std
+stableRates_mean(high)
+stableRates_mean(low)
