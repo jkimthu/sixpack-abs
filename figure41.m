@@ -18,9 +18,9 @@
 
 
 
-%  last updated: jen, 2018 August 26
+%  last updated: jen, 2018 Oct 3
 
-%  commit: add figures 3 & 4 to plot mean and standard dev of each condition 
+%  commit: starting to include fluc to high data
 
 
 % OK let's go!
@@ -40,7 +40,7 @@ load('storedMetaData.mat')
 prompt = 'Enter shift type as string (upshift / downshift): ';
 shiftType = input(prompt);
 
-prompt = 'Enter specific growth rate definition as string (raw / norm / log / lognorm / mu): ';
+prompt = 'Enter specific growth rate definition as string (raw / norm / log2 / lognorm): ';
 specificGrowthRate = input(prompt);
 
 prompt = 'Enter time per bin in seconds as double (i.e. 25): ';
@@ -54,10 +54,10 @@ timePerBin = input(prompt);
 % 1. create array of experiments of interest, then loop through each
 
 if strcmp(shiftType,'upshift');
-    exptArray = [5,6,7,10:15,21,22]; % use corresponding dataIndex values
+    exptArray = [5,6,7,9:15,21,22]; % use corresponding dataIndex values
     shiftVal = 1;
 else
-    exptArray = [5,6,7,10:15,26,27];
+    exptArray = [5,6,7,9:15,25,26,27];
     shiftVal = 2;
 end
 
@@ -90,12 +90,8 @@ for e = 1:length(exptArray)
     % 3. load measured data
     experimentFolder = strcat('/Users/jen/Documents/StockerLab/Data/LB/',date);
     cd(experimentFolder)
-    if isnan(shiftTime) == 1
-        filename = strcat('lb-fluc-',date,'-window5-width1p4-1p7-jiggle-0p5.mat');
-    else
-        filename = strcat('lb-fluc-',date,'-window5-width1p7-jiggle-0p5.mat');
-    end
-    load(filename,'D5','M','M_va','T');
+    filename = strcat('lb-fluc-',date,'-width1p7-jiggle-0p5.mat');
+    load(filename,'D5','T');
     
     
     
@@ -104,30 +100,29 @@ for e = 1:length(exptArray)
     condition = 1;                                      % 1 = fluctuating
     xy_start = storedMetaData{index}.xys(condition,1);
     xy_end = storedMetaData{index}.xys(condition,end);
-    conditionData = buildDM(D5, M, M_va, T, xy_start, xy_end,index,expType);
-    
+    conditionData = buildDM(D5, T, xy_start, xy_end,index,expType);
     
     
     
     % 5. isolate condition data to those from full cell cycles
-    curveIDs = conditionData(:,6);           % col 6 = curve ID
+    curveIDs = conditionData(:,5);           % col 5 = curve ID
     conditionData_fullOnly = conditionData(curveIDs > 0,:);
-    clear curveFinder
+    clear curveIDs
     
     
     
     % 6. isolate volume (Va), timestamp, mu, drop and curveID data
-    volumes = conditionData_fullOnly(:,12);            % col 12 = calculated va_vals (cubic um)
+    volumes = conditionData_fullOnly(:,11);            % col 11 = calculated va_vals (cubic um)
     timestamps_sec = conditionData_fullOnly(:,2);      % col 2  = timestamp in seconds
-    isDrop = conditionData_fullOnly(:,5);              % col 5  = isDrop, 1 marks a birth event
-    curveFinder = conditionData_fullOnly(:,6);         % col 6  = curve finder (ID of curve in condition)
-    mus = conditionData_fullOnly(:,14);           % col 14 = mu, calculated from volume tracks
+    isDrop = conditionData_fullOnly(:,4);              % col 4  = isDrop, 1 marks a birth event
+    curveFinder = conditionData_fullOnly(:,5);         % col 5  = curve finder (ID of curve in condition)
+    trackNum = conditionData_fullOnly(:,20);           % col 20 = total track number in condition
     
     
     
     % 7. calculate growth rate
-    growthRates = calculateGrowthRate(volumes,timestamps_sec,isDrop,curveFinder,mus);
-    
+    growthRates = calculateGrowthRate(volumes,timestamps_sec,isDrop,curveFinder,trackNum);
+   
     
     
     
@@ -171,16 +166,14 @@ for e = 1:length(exptArray)
         specificColumn = 2;
         xmin = -1;
         xmax = 3;
-    elseif strcmp(specificGrowthRate,'log') == 1
+    elseif strcmp(specificGrowthRate,'log2') == 1
         specificColumn = 3;
-        xmin = -2;
-        xmax = 3;
+        xmin = -1.5;
+        xmax = 3.5;
     elseif strcmp(specificGrowthRate,'lognorm') == 1
         specificColumn = 4;
         xmin = -0.5;
         xmax = 1;
-    elseif strcmp(specificGrowthRate,'mu') == 1;
-        specificColumn = 5;
     end
     
     growthRt = growthRates_trim2(:,specificColumn);
@@ -193,7 +186,7 @@ for e = 1:length(exptArray)
     if strcmp(date, '2017-10-10') == 1
         correctedTime = conditionData_trim2(:,2);
     else
-        correctedTime = conditionData_trim2(:,25); % col 25 = timestamps corrected for signal lag
+        correctedTime = conditionData_trim2(:,22); % col 22 = timestamps corrected for signal lag
     end
     clear D5 M M_va T isDrop timestamps_sec  
     
@@ -209,29 +202,26 @@ for e = 1:length(exptArray)
     
     
     
-    % 12. compute nutrient signal, where 1 = high and 0 = low
-    %       (i) translate timestamps into quarters of nutrient signal, such
-    %           that each timepoint has a value between 1-4, which
-    %           conveys the quartile of the nutrient signal in which that
-    %           timepoint resides
-    
-    %           in original fluctuating experiments:
-    %           Q1 & Q4 are part of the high nutrient phase, whereas
-    %           Q2 & Q3 are part of the low
-    
-    timeInPeriods = correctedTime_noNans/timescale; % unit = sec/sec
-    timeInPeriodFraction = timeInPeriods - floor(timeInPeriods);
-
-    
-    
-    
-    
     % 13. assign corrected timestamps to bins, by which to accumulate growth data
     
     if isnan(shiftTime) == 1 % if original fluctuating experiment
         
+        % 12. compute nutrient signal, where 1 = high and 0 = low
+        %       (i) translate timestamps into quarters of nutrient signal, such
+        %           that each timepoint has a value between 1-4, which
+        %           conveys the quartile of the nutrient signal in which that
+        %           timepoint resides
+        
+        %           in original fluctuating experiments:
+        %           Q1 & Q4 are part of the high nutrient phase, whereas
+        %           Q2 & Q3 are part of the low
+        
+        timeInPeriods = correctedTime_noNans/timescale; % unit = sec/sec
+        timeInPeriodFraction = timeInPeriods - floor(timeInPeriods);
+
         timeInPeriodFraction_inSeconds = timeInPeriodFraction * timescale;
         bins = ceil(timeInPeriodFraction_inSeconds/timePerBin);
+        
         
         % 14. find which bins are boundaries signal phases 
         lastBin_Q1 = (timescale/timePerBin)/4;                      % last bin before downshift
@@ -249,7 +239,7 @@ for e = 1:length(exptArray)
         clear timeInPeriodFraction timeInPeriodFraction_inSeconds
         
         
-    else
+    elseif isnan(timescale) == 1 % single upshift 
         
         bins = ceil(correctedTime_noNans/timePerBin);      % bin 1 = first 25 sec of experiment
         bins_unique = unique(bins);
@@ -257,7 +247,29 @@ for e = 1:length(exptArray)
         % generalized for single shift experiments
         single_shiftBins = bins(bins*timePerBin > shiftTime);
         single_shiftBins_unique{counter} = unique(single_shiftBins);
-        firstBin_single_shift = single_shiftBins_unique{counter}(1);     
+        firstBin_single_shift = single_shiftBins_unique{counter}(1);   
+        
+        
+    else % fluc to high experiment
+        
+        % 12. compute nutrient signal,PRIOR TO FINAL SHIFT TO STABLE, where 1 = high and 0 = low
+        %       (i) translate timestamps into quarters of nutrient signal, such
+        %           that each timepoint has a value between 1-4, which
+        %           conveys the quartile of the nutrient signal in which that
+        %           timepoint resides
+        
+        %           in original fluctuating experiments:
+        %           Q1 & Q4 are part of the high nutrient phase, whereas
+        %           Q2 & Q3 are part of the low
+        
+        correctedTime_prior2shift = correctedTime_noNans(correctedTime_noNans < shiftTime);
+        
+        timeInPeriods = correctedTime_prior2shift/timescale; % unit = sec/sec
+        timeInPeriodFraction = timeInPeriods - floor(timeInPeriods);
+
+        timeInPeriodFraction_inSeconds = timeInPeriodFraction * timescale;
+        bins = ceil(timeInPeriodFraction_inSeconds/timePerBin);
+        
         
     end
     
@@ -282,7 +294,7 @@ for e = 1:length(exptArray)
         end
         pre_upshiftBins{counter} = lastBin_downshift - preShift_bins : lastBin_downshift;
          
-    else
+    elseif isnan(timescale) == 1
         
         % single shift experiments don't have high/low phase interruptions
         preShift_bins = 10;
@@ -316,6 +328,8 @@ for e = 1:length(exptArray)
     
     
     % 17. plot response in growth rate for all timescales over time
+    timePerBin_min = timePerBin/60; % time per bin in minutes
+    
     if timescale == 300
         sp = 1;
         color_high = rgb('DarkSlateBlue');
@@ -334,19 +348,21 @@ for e = 1:length(exptArray)
     end
     
     
+    
+    
     if strcmp(shiftType,'upshift') == 1
         
         figure(1)   % upshift
         
         % pre upshift
-        plot((preShift_bins*-1:0)*timePerBin,binned_mean{counter}(pre_upshiftBins{counter}),'Color',color_low,'LineWidth',1)
+        plot((preShift_bins*-1:0)*timePerBin_min,binned_mean{counter}(pre_upshiftBins{counter})/log(2),'Color',color_low,'LineWidth',1)
         hold on
         
         % post upshift
         if isnan(shiftTime) == 1
-            plot((1:length(binned_mean{counter}(upshiftBins{counter})))*timePerBin,binned_mean{counter}(upshiftBins{counter}),'Color',color_high,'LineWidth',1)
+            plot((1:length(binned_mean{counter}(upshiftBins{counter})))*timePerBin_min,binned_mean{counter}(upshiftBins{counter})/log(2),'Color',color_high,'LineWidth',1)
         else
-            plot((1:length(binned_mean{counter}(single_shiftBins_unique{counter})))*timePerBin,binned_mean{counter}(single_shiftBins_unique{counter}),'Color',color_high,'LineWidth',1)
+            plot((1:length(binned_mean{counter}(single_shiftBins_unique{counter})))*timePerBin_min,binned_mean{counter}(single_shiftBins_unique{counter})/log(2),'Color',color_high,'LineWidth',1)
         end
         grid on
         hold on
@@ -358,14 +374,14 @@ for e = 1:length(exptArray)
         figure(2)    % downshift
         
         % pre downshift
-        plot((preShift_bins*-1:0)*timePerBin,binned_mean{counter}(pre_downshiftBins{counter}),'Color',color_low,'LineWidth',1)
+        plot((preShift_bins*-1:0)*timePerBin_min,binned_mean{counter}(pre_downshiftBins{counter})/log(2),'Color',color_low,'LineWidth',1)
         hold on
         
         % post shift
         if isnan(shiftTime) == 1
-            plot((1:length(binned_mean{counter}(downshiftBins{counter})))*timePerBin,binned_mean{counter}(downshiftBins{counter}),'Color',color_high,'LineWidth',1)
+            plot((1:length(binned_mean{counter}(downshiftBins{counter})))*timePerBin_min,binned_mean{counter}(downshiftBins{counter})/log(2),'Color',color_high,'LineWidth',1)
         else
-            plot((1:length(binned_mean{counter}(single_shiftBins_unique{counter})))*timePerBin,binned_mean{counter}(single_shiftBins_unique{counter}),'Color',color_high,'LineWidth',1)
+            plot((1:length(binned_mean{counter}(single_shiftBins_unique{counter})))*timePerBin_min,binned_mean{counter}(single_shiftBins_unique{counter})/log(2),'Color',color_high,'LineWidth',1)
         end
         grid on
         hold on
@@ -377,9 +393,9 @@ for e = 1:length(exptArray)
 end
 
 
-xlabel('time (sec)')
-ylabel(strcat('growth rate: (', specificGrowthRate ,')'))
-axis([preShift_bins*-1*timePerBin,3000,xmin,xmax])
+xlabel('time (min)')
+ylabel(strcat('growth rate: (', specificGrowthRate,')'))
+axis([preShift_bins*-1*timePerBin_min,60,xmin,xmax])
 
 %%
 
@@ -404,16 +420,16 @@ binnedMean_shift(binnedMean_shift == 0) = NaN;
 
 
 % collect mean from each row
-m300 = mean(binnedMean_300,2);
-m900 = mean(binnedMean_900,2);
-m3600 = mean(binnedMean_3600,2);
-m_shift = mean(binnedMean_shift,2);
+m300 = mean(binnedMean_300,2)/log(2);
+m900 = mean(binnedMean_900,2)/log(2);
+m3600 = mean(binnedMean_3600,2)/log(2);
+m_shift = mean(binnedMean_shift,2)/log(2);
 
 % collect standard dev from each row
-sd300 = std(binnedMean_300,0,2);
-sd900 = std(binnedMean_900,0,2);
-sd3600 = std(binnedMean_3600,0,2);
-sd_shift = std(binnedMean_shift,0,2);
+sd300 = std(binnedMean_300,0,2)/log(2);
+sd900 = std(binnedMean_900,0,2)/log(2);
+sd3600 = std(binnedMean_3600,0,2)/log(2);
+sd_shift = std(binnedMean_shift,0,2)/log(2);
 
 
 %% upshift response, average between experimental replicates
@@ -421,7 +437,7 @@ sd_shift = std(binnedMean_shift,0,2);
 figure(3)
 
 % post single upshift
-tsingle = (-10:length(m_shift(single_shiftBins_unique{10})))*timePerBin;
+tsingle = (-10:length(m_shift(single_shiftBins_unique{10})))*timePerBin_min;
 m_single = [m_shift(pre_upshiftBins{10}); m_shift(single_shiftBins_unique{10})];
 sd_single = [sd_shift(pre_upshiftBins{10}); sd_shift(single_shiftBins_unique{10})];
 errorbar(tsingle,m_single,sd_single,'Color',color_single,'LineWidth',1)
@@ -429,7 +445,7 @@ hold on
 
 % 3600
 % concatenate pre-upshift and post shift
-t3600 = (-4:length(m3600(upshiftBins{9})))*timePerBin;
+t3600 = (-4:length(m3600(upshiftBins{9})))*timePerBin_min;
 m3600_2plot = [m3600(pre_upshiftBins{9}); m3600(upshiftBins{9})];
 sd3600_2plot = [sd3600(pre_upshiftBins{9}); sd3600(upshiftBins{9})];
 errorbar(t3600,m3600_2plot,sd3600_2plot,'Color',color3600,'LineWidth',1)
@@ -437,7 +453,7 @@ hold on
 
 % 900
 % concatenate pre-upshift and post shift
-t900 = (-4:length(m900(upshiftBins{6})))*timePerBin;
+t900 = (-4:length(m900(upshiftBins{6})))*timePerBin_min;
 m900_2plot = [m900(pre_upshiftBins{6}); m900(upshiftBins{6})];
 sd900_2plot = [sd900(pre_upshiftBins{6}); sd900(upshiftBins{6})];
 errorbar(t900,m900_2plot,sd900_2plot,'Color',color900,'LineWidth',1)
@@ -445,7 +461,7 @@ hold on
 
 % 300
 % concatenate pre-upshift and post shift
-t300 = (-2:length(m300(upshiftBins{3})))*timePerBin;
+t300 = (-2:length(m300(upshiftBins{3})))*timePerBin_min;
 m300_2plot = [m300(pre_upshiftBins{3}); m300(upshiftBins{3})];
 sd300_2plot = [sd300(pre_upshiftBins{3}); sd300(upshiftBins{3})];
 errorbar(t300,m300_2plot,sd300_2plot,'Color',color300,'LineWidth',1)
@@ -454,8 +470,8 @@ hold on
 
 title(strcat('response to upshift, binned every (',num2str(timePerBin),') sec'))
 xlabel('time (sec)')
-ylabel(strcat('growth rate: (', specificGrowthRate ,')'))
-axis([preShift_bins*-1*timePerBin,3000,0,2.5])
+ylabel(strcat('growth rate: (', specificGrowthRate ,'/ln(2))'))
+axis([preShift_bins*-1*timePerBin_min,60,0,4])
 
 
 
@@ -466,7 +482,7 @@ figure(4)
 
 
 % post single upshift
-tsingle = (-10:length(m_shift(single_shiftBins_unique{10})))*timePerBin;
+tsingle = (-10:length(m_shift(single_shiftBins_unique{10})))*timePerBin_min;
 m_single = [m_shift(pre_downshiftBins{10}); m_shift(single_shiftBins_unique{10})];
 sd_single = [sd_shift(pre_downshiftBins{10}); sd_shift(single_shiftBins_unique{10})];
 errorbar(tsingle,m_single,sd_single,'Color',color_single,'LineWidth',1)
@@ -476,7 +492,7 @@ hold on
 
 % 3600
 % concatenate pre-upshift and post shift
-t3600 = (-4:length(m3600(downshiftBins{9})))*timePerBin;
+t3600 = (-4:length(m3600(downshiftBins{9})))*timePerBin_min;
 m3600_2plot = [m3600(pre_downshiftBins{9}); m3600(downshiftBins{9})];
 sd3600_2plot = [sd3600(pre_downshiftBins{9}); sd3600(downshiftBins{9})];
 errorbar(t3600,m3600_2plot,sd3600_2plot,'Color',color3600,'LineWidth',1)
@@ -485,7 +501,7 @@ hold on
 
 % 900
 % concatenate pre-upshift and post shift
-t900 = (-4:length(m900(downshiftBins{6})))*timePerBin;
+t900 = (-4:length(m900(downshiftBins{6})))*timePerBin_min;
 m900_2plot = [m900(pre_downshiftBins{6}); m900(downshiftBins{6})];
 sd900_2plot = [sd900(pre_downshiftBins{6}); sd900(downshiftBins{6})];
 errorbar(t900,m900_2plot,sd900_2plot,'Color',color900,'LineWidth',1)
@@ -493,7 +509,7 @@ hold on
 
 % 300
 % concatenate pre-upshift and post shift
-t300 = (-2:length(m300(downshiftBins{3})))*timePerBin;
+t300 = (-2:length(m300(downshiftBins{3})))*timePerBin_min;
 m300_2plot = [m300(pre_downshiftBins{3}); m300(downshiftBins{3})];
 sd300_2plot = [sd300(pre_downshiftBins{3}); sd300(downshiftBins{3})];
 errorbar(t300,m300_2plot,sd300_2plot,'Color',color300,'LineWidth',1)
@@ -502,7 +518,7 @@ hold on
 title(strcat('response to downshift, binned every (',num2str(timePerBin),') sec'))
 xlabel('time (sec)')
 ylabel(strcat('growth rate: (', specificGrowthRate ,')'))
-axis([preShift_bins*-1*timePerBin,3000,-1,3])
+axis([preShift_bins*-1*timePerBin_min,60,-1,3.5])
 
 
 %%
