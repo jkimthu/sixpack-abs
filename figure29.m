@@ -5,11 +5,11 @@
 %  Strategy:
 
 
-%  Last edit: jen, 2018 June 22
+%  Last edit: jen, 2018 Jul 7
 
 %  commit: violin plots to compare distributions between fluc and
-%          stable, green is 2018-01-16 (15 min) and
-%          blue is 2018-02-01 (60 min)
+%          stable, left is 2018-01-16 (15 min) and
+%          right is 2018-02-01 (60 min)
 %          
 
 
@@ -31,8 +31,8 @@ dataIndex = find(~cellfun(@isempty,storedMetaData));
 
 % 1. for all experiments in dataset
 ec = 0; % experiment counter
-exptsToInclude = [10,14];
-%%
+exptsToInclude = [2,14];
+%% 
 for i = 1:length(exptsToInclude)
    
     % 2. collect experiment date
@@ -127,18 +127,20 @@ for i = 1:length(exptsToInclude)
         
         % 13. isolate birth volume and inter-division time
         volumes = conditionData_trim2(:,12);            % col 12 = calculated va_vals (cubic um)
+        addedVolume = conditionData_trim2(:,15);         % col 15 = calculated added volume (cubic um)
         curveDurations = conditionData_trim2(:,8)/60;   % col 8  = inter-division times 
         isDrop = conditionData_trim2(:,5);              % col 5  = 1 at birth event, 0 if not
         
         vol_atBirth = volumes(isDrop == 1);
         interDivisions = curveDurations(isDrop == 1);
-        
+        interDivisions_physical = interDivisions(interDivisions >= 10);
         
         % 14. collectdV/dt data into bins
         binned_dVdt{condition,1} = dVdt_trim2;
         binned_dVdt_overV{condition,1} = dVdt_overV_trim2;
         binned_birthVolumes{condition,1} = vol_atBirth;
-        binned_divisionTimes{condition,1} = interDivisions;
+        binned_divisionTimes{condition,1} = interDivisions_physical;
+        binned_addedVolume{condition,1} = addedVolume;
         
     end
     
@@ -148,57 +150,70 @@ for i = 1:length(exptsToInclude)
     % biomass production rate
     figure(1)
     if ec == 1
-        distributionPlot(binned_dVdt,'widthDiv',[2 1],'histOri','left','color',[0 0.7 0.7],'showMM',2) % green
+        distributionPlot(binned_dVdt,'widthDiv',[2 1],'histOri','left','color',rgb('PaleVioletRed'),'showMM',2) % green
     else
-        distributionPlot(gca,binned_dVdt,'widthDiv',[2 2],'histOri','right','color',[0.25 0.25 0.9],'showMM',2) % purple
+        distributionPlot(gca,binned_dVdt,'widthDiv',[2 2],'histOri','right','color',rgb('Pink'),'showMM',2) % purple
     end
     xlabel('growth condition')
     ylabel('dV/dt (cubic um/hr)')
     title('histograms of growth rates across conditions')
-    legend('left: 2018-01-16 (15min)','right: 2018-02-01 (60min)')
+    legend('left: 2017-11-12 (30sec)','right: 2018-02-01 (60min)')
     axis([0 5 -25 50])
     
     
     % normalized growth rate
     figure(2)
     if ec == 1
-        distributionPlot(binned_dVdt_overV,'widthDiv',[2 1],'histOri','left','color',[0 0.7 0.7],'showMM',2) % green
+        distributionPlot(binned_dVdt_overV,'widthDiv',[2 1],'histOri','left','color',rgb('MediumVioletRed'),'showMM',2) % green
     else
-        distributionPlot(gca,binned_dVdt_overV,'widthDiv',[2 2],'histOri','right','color',[0.25 0.25 0.9],'showMM',2) % purple
+        distributionPlot(gca,binned_dVdt_overV,'widthDiv',[2 2],'histOri','right','color',rgb('Thistle'),'showMM',2) % purple
     end
     xlabel('growth condition')
     ylabel('(dV/dt)/V (1/hr)')
     title('histograms of growth rates across conditions')
-    legend('left: 2018-01-16 (15min)','right: 2018-02-01 (60min)')
+    legend('left: 2017-11-12 (30sec)','right: 2018-02-01 (60min)')
     axis([0 5 -5 10])
     
     
     % volume at birth
     figure(3)
     if ec == 1
-        distributionPlot(binned_birthVolumes,'widthDiv',[2 1],'histOri','left','color',[0 0.7 0.7],'showMM',2) % green
+        distributionPlot(binned_birthVolumes,'widthDiv',[2 1],'histOri','left','color',rgb('PaleVioletRed'),'showMM',2) % green
     else
-        distributionPlot(gca,binned_birthVolumes,'widthDiv',[2 2],'histOri','right','color',[0.25 0.25 0.9],'showMM',2) % purple
+        distributionPlot(gca,binned_birthVolumes,'widthDiv',[2 2],'histOri','right','color',rgb('Thistle'),'showMM',2) % purple
     end
     xlabel('growth condition')
     ylabel('volume at birth (cubic um)')
     title('histograms of birth volume across conditions')
-    legend('left: 2018-01-16 (15min)','right: 2018-02-01 (60min)')
+    legend('left: 2017-11-12 (30sec)','right: 2018-02-01 (60min)')
     axis([0 5 0 15])
     
     
     % inter-division time
     figure(4)
     if ec == 1
-        distributionPlot(binned_divisionTimes,'widthDiv',[2 1],'histOri','left','color',[0 0.7 0.7],'showMM',2) % green
+        distributionPlot(binned_divisionTimes,'widthDiv',[2 1],'histOri','left','color',rgb('Pink'),'showMM',2) % green
     else
-        distributionPlot(gca,binned_divisionTimes,'widthDiv',[2 2],'histOri','right','color',[0.25 0.25 0.9],'showMM',2) % purple
+        distributionPlot(gca,binned_divisionTimes,'widthDiv',[2 2],'histOri','right','color',rgb('Thistle'),'showMM',2) % purple
     end
     xlabel('growth condition')
     ylabel('inter-division time (min)')
     title('histograms of interdivision time across conditions')
-    legend('left: 2018-01-16 (15min)','right: 2018-02-01 (60min)')
+    legend('left: 2017-11-12 (30sec)','right: 2018-02-01 (60min)')
     axis([0 5 0 100])
+    
+    % added volume
+    figure(5)
+    if ec == 1
+        distributionPlot(binned_addedVolume,'widthDiv',[2 1],'histOri','left','color',rgb('MediumVioletRed'),'showMM',2) % green
+    else
+        distributionPlot(gca,binned_addedVolume,'widthDiv',[2 2],'histOri','right','color',rgb('LightPink'),'showMM',2) % purple
+    end
+    xlabel('growth condition')
+    ylabel('added volume (cubic um)')
+    title('histograms of added volume across conditions')
+    legend('left: 2017-11-12 (30sec)','right: 2018-02-01 (60min)')
+    axis([0 5 0 15])
     
     clearvars -except dVdtData_fullOnly_newdVdt storedMetaData ec timePerBin datesForLegend dataIndex exptsToInclude
     
