@@ -18,8 +18,7 @@
 
 %  last updated: jen, 2018 Oct 28
 
-%  commit: ignore frames identified as noisy tracking and plot without
-%          smoothing
+%  commit: comment out ignorant section for control
 
 
 % OK let's go!
@@ -477,9 +476,9 @@ for e_shift = 1:length(exptArray)
     % 10. assign NaN to all growth rates associated with frames to ignore
     frameNum = conditionData_trim2(:,16); % col 16 = original frame number
     growthRt_ignorant = growthRt;
-    for fr = 1:length(ignoredFrames)
-        growthRt_ignorant(frameNum == ignoredFrames(fr),1) = NaN;
-    end
+    %for fr = 1:length(ignoredFrames)
+    %    growthRt_ignorant(frameNum == ignoredFrames(fr),1) = NaN;
+    %end
     clear frameNum conditionData_trim2
     
     
@@ -613,7 +612,7 @@ else
     
     
 end
-
+axis([numPreshiftBins*-1*timePerBin_min,160,xmin,xmax])
 
 
 
