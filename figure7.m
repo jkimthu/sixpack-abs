@@ -24,10 +24,10 @@
 %      13. repeat for all experiments 
 
 
-%  last updated: jen, 2018 October 16
+%  last updated: jen, 2018 October 23
 
-%  commit: plot cropped versions of single upshift and downshift data,
-%          2018-08-01 and 2018-08-08
+%  commit: re-plot figure7 for all final 1x upshift and downshift
+%          replicates and determine time of noisy(?) peaks
 
 
 % OK let's go!
@@ -55,7 +55,7 @@ clear prompt
 
 %%
 % 1. create array of experiments of interest, then loop through each:
-exptArray = [22,26]; % use corresponding dataIndex values
+exptArray = [21,22,26,27]; % use corresponding dataIndex values
 
 for e = 1:length(exptArray)
     
@@ -76,37 +76,27 @@ for e = 1:length(exptArray)
     
     experimentFolder = strcat('/Users/jen/Documents/StockerLab/Data/LB/',date);
     cd(experimentFolder)
-    %if wthresh == 1
     if strcmp(date,'2017-11-12') == 1
         filename = strcat('lb-fluc-',date,'-width1p4-jiggle-0p5.mat');
     elseif strcmp(date,'2017-11-09') == 1
         filename = strcat('lb-control-',date,'-width1p4-jiggle-0p5.mat');
     elseif strcmp(date,'2017-09-26') == 1
-        %filename = strcat('lb-monod-',date,'-width1p7-jiggle-0p5.mat');
-        %filename = 'lb-monod-2017-09-26-c123-width1p7-c456-width1p4-jiggle-0p5.mat';
         filename = 'lb-monod-2017-09-26-jiggle-c12-0p1-c3456-0p5-bigger1p8.mat';
     else
         %filename = strcat('lb-fluc-',date,'-c123-width1p4-c4-1p7-jiggle-0p5.mat');
         filename = strcat('lb-fluc-',date,'-width1p7-jiggle-0p5.mat');
+        % single upshift and downshift data only uses larger width thresh
     end
     load(filename,'D5','T');
     
     
     
     % 5. build data matrix from specified condition
-    for condition = 1:length(bubbletime)
+    for condition = 1%:length(bubbletime)
         
         xy_start = storedMetaData{index}.xys(condition,1);
         xy_end = storedMetaData{index}.xys(condition,end);
         conditionData = buildDM(D5, T, xy_start, xy_end,index,expType);
-        
-        
-        
-        % 6. isolate condition data to those with full cell cycles
-        %curveIDs = conditionData(:,5);           % col 5 = curve ID
-        %conditionData_fullOnly = conditionData(curveIDs > 0,:);
-        %clear curveFinder
-        
         
         
         
@@ -182,7 +172,10 @@ for e = 1:length(exptArray)
         bin_counts = cellfun(@length,binned_growthRt);
         bin_sems = bin_stds./sqrt(bin_counts);
         
-        
+        if condition == 1
+            bin_means_compiled{e} = bin_means; % for determine where noise(?) peaks are in time
+            bin_times{e} = (1:length(bin_means))/binsPerHour;
+        end
         
         % 13. plot growth rate over time
         palette = {'DodgerBlue','Indigo','GoldenRod','FireBrick','LimeGreen','MediumPurple'};
@@ -193,21 +186,22 @@ for e = 1:length(exptArray)
         %    color = rgb(palette(condition)) * 0.2;
         %end
         xmark = '.';
-        
-        figure(e)
-        %         errorbar((1:length(bin_means))/binsPerHour,bin_means,bin_sems,'Color',color)
-        %         hold on
-        plot((1:length(bin_means))/binsPerHour,bin_means,'Color',color,'Marker',xmark)
-        hold on
-        grid on
-        %axis([0,10.1,xmin,xmax])
-        axis([1.8,8.2,-0.1,3.4])
-        xlabel('Time (hr)')
-        ylabel('Growth rate')
-        title(strcat(date,': (',specificGrowthRate,')'))
-        
+%         
+%         figure(e)
+%         %         errorbar((1:length(bin_means))/binsPerHour,bin_means,bin_sems,'Color',color)
+%         %         hold on
+%         plot((1:length(bin_means))/binsPerHour,bin_means,'Color',color,'Marker',xmark)
+%         hold on
+%         grid on
+%         %axis([0,10.1,xmin,xmax])
+%         axis([1.8,8.2,-0.1,3.4])
+%         xlabel('Time (hr)')
+%         ylabel('Growth rate')
+%         title(strcat(date,': (',specificGrowthRate,')'))
+%         
         %end
     end
+    
     
     % 14. save plots in active folder
     %cd('/Users/jen/Documents/StockerLab/Data_analysis/currentPlots/')
