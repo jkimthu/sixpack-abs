@@ -15,8 +15,7 @@
 
 %  last updated: jen, 2018 Oct 28
 
-%  commit: comment out ignorant section for control plot, remove 2018-08-07
-%          data from downshift analysis
+%  commit: downshift analysis, ignoring specific noisy frames 
 
 
 % OK let's go!
@@ -347,11 +346,6 @@ axis([numPreshiftBins*-1*timePerBin_min,80,xmin,xmax])
 
 %% Part C. curves for single shift data
 
-% 0. initialize smoothing parameters
-%order = 2;        % Use sgolay to smooth the signal, with 35-sample frames and 2nd-order polynomials. 
-%framelength = 7; 
-%b = sgolay(order,framelength);
-
 
 % 1. create array of experiments of interest, then loop through each
 if strcmp(shiftType,'upshift');
@@ -376,8 +370,8 @@ for e_shift = 1:length(exptArray)
         ignoredFrames = [94,95];
     elseif strcmp(date,'2018-08-09') == 1
         ignoredFrames = [115,116,117];
-    else
-        ignoredFrames = [];
+    elseif strcmp(date,'2018-08-08') == 1
+        ignoredFrames = [112,113,114];
     end
     
     
@@ -468,9 +462,9 @@ for e_shift = 1:length(exptArray)
     % 11. assign NaN to all growth rates associated with frames to ignore
     frameNum = conditionData_trim2(:,16); % col 16 = original frame number
     growthRt_ignorant = growthRt;
-    %for fr = 1:length(ignoredFrames)
-    %    growthRt_ignorant(frameNum == ignoredFrames(fr),1) = NaN;
-    %end
+    for fr = 1:length(ignoredFrames)
+        growthRt_ignorant(frameNum == ignoredFrames(fr),1) = NaN;
+    end
     
     
     % 12. remove nans from data analysis
@@ -586,67 +580,3 @@ axis([numPreshiftBins*-1*timePerBin_min,160,xmin,xmax])
 
 
 
-
-%% test smoothing with sgolay filter
-%data_to_smooth = binned_mean{counter}(single_shiftBins_unique{counter});
-
-% Use sgolay to smooth the signal. Use 21-sample frames and 4th-order polynomials.
-order = 2;
-framelength = 27;
-
-b = sgolay(order,framelength);
-
-
-% Compute the steady-state portion of the signal by convolving it with the center row of b.
-ycenter = conv(x,b((framelength+1)/2,:),'valid');
-
-
-% Compute the transients.
-% Use the last rows of b for the startup and the first rows of b for the terminal.
-ybegin = b(end:-1:(framelength+3)/2,:) * x(framelength:-1:1);
-yend = b((framelength-1)/2:-1:1,:) * x(end:-1:end-(framelength-1));
-
-
-% Concatenate the transients and the steady-state portion to generate the complete smoothed signal.
-% Plot the original signal and the Savitzky-Golay estimate.
-figure(2)
-y = [ybegin; ycenter; yend];
-plot([x y])
-%
-
-
-
-
-% plot average and standard dev of experimental means
-
-% define color scheme
-color300 = rgb('Chocolate');
-color900 = rgb('ForestGreen');
-color3600 = rgb('Amethyst');
-color_single = rgb('MidnightBlue');
-
-
-% brute force
-% isolate experiments based on type (as indicated in notes)
-binnedMean_300 = [binned_mean{1}, binned_mean{2}, binned_mean{3}];
-binnedMean_900 = [binned_mean{4}, binned_mean{5}, binned_mean{6}];
-binnedMean_3600 = [binned_mean{7}, binned_mean{8}, binned_mean{9}];
-
-binnedMean_shift = [binned_mean{10}, binned_mean{11}(1:length(binned_mean{10}))];
-binnedMean_shift(binnedMean_shift == 0) = NaN;
-
-
-% collect mean from each row
-m300 = mean(binnedMean_300,2)/log(2);
-m900 = mean(binnedMean_900,2)/log(2);
-m3600 = mean(binnedMean_3600,2)/log(2);
-m_shift = mean(binnedMean_shift,2)/log(2);
-
-% collect standard dev from each row
-sd300 = std(binnedMean_300,0,2)/log(2);
-sd900 = std(binnedMean_900,0,2)/log(2);
-sd3600 = std(binnedMean_3600,0,2)/log(2);
-sd_shift = std(binnedMean_shift,0,2)/log(2);
-
-
-%% 

@@ -18,8 +18,7 @@
 
 %  last updated: jen, 2018 Oct 28
 
-%  commit: comment out ignorant section for control, remove 2018-08-07 from
-%          analysis
+%  commit: downshift analysis, ignoring specific noisy frames
 
 
 % OK let's go!
@@ -387,8 +386,8 @@ for e_shift = 1:length(exptArray)
         ignoredFrames = [94,95];
     elseif strcmp(date,'2018-08-09') == 1
         ignoredFrames = [115,116,117];
-    else
-        ignoredFrames = [];
+    elseif strcmp(date,'2018-08-08') == 1
+        ignoredFrames = [112,113,114];
     end
     
     bubbletime = storedMetaData{index}.bubbletime;
@@ -477,10 +476,11 @@ for e_shift = 1:length(exptArray)
     % 10. assign NaN to all growth rates associated with frames to ignore
     frameNum = conditionData_trim2(:,16); % col 16 = original frame number
     growthRt_ignorant = growthRt;
-    %for fr = 1:length(ignoredFrames)
-    %    growthRt_ignorant(frameNum == ignoredFrames(fr),1) = NaN;
-    %end
+    for fr = 1:length(ignoredFrames)
+        growthRt_ignorant(frameNum == ignoredFrames(fr),1) = NaN;
+    end
     clear frameNum conditionData_trim2
+    
     
     
     % 11. remove nans from data analysis
@@ -490,7 +490,7 @@ for e_shift = 1:length(exptArray)
     
     
     
-    % 11. assign corrected timestamps to bins, by which to accumulate growth data
+    % 12. assign corrected timestamps to bins, by which to accumulate growth data
     bins = ceil(correctedTime_noNans/timePerBin);      % bin 1 = first timePerBin sec of experiment
     bins_unique = (min(bins):max(bins))';              % avoids missing bins due to lack of data
     
@@ -499,7 +499,7 @@ for e_shift = 1:length(exptArray)
     first_postshiftBin_single = ceil(shiftTime/timePerBin) + 1; % shift occurs at shiftTime/timePerBin, so first full bin with shifted data is the next one
     
     
-    % 14. choose which pre-shift data bins to plot
+    % 13. choose which pre-shift data bins to plot
     % single shift experiments don't have high/low phase interruptions
     % however, they do have bins missing data!
     numPreshiftBins = 10;
@@ -518,7 +518,7 @@ for e_shift = 1:length(exptArray)
     
     
 
-    % 11. concatenate growth rate and corrected time data based on shift type
+    % 14. concatenate growth rate and corrected time data based on shift type
     if strcmp(expType,'upshift') == 1
         
         growthCat_singleUP = [growthCat_singleUP; growthRt_normalizedByShiftTime_trimmed];
