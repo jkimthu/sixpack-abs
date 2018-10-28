@@ -18,7 +18,8 @@
 
 %  last updated: jen, 2018 Oct 28
 
-%  commit: comment out ignorant section for control
+%  commit: comment out ignorant section for control, remove 2018-08-07 from
+%          analysis
 
 
 % OK let's go!
@@ -50,7 +51,7 @@ clear prompt
 
 
 
-%% Part B. overlay up or downshift data
+%% Part B. overlay up or downshift data from fluctuating experiments
 
 %  strategy:
 %   
@@ -361,7 +362,7 @@ clear downshiftBins upshiftBins
 if strcmp(shiftType,'upshift')
     exptArray = [21,22]; % use corresponding dataIndex values
 else
-    exptArray = [25,26,27];
+    exptArray = [26,27];
 end
 
 
