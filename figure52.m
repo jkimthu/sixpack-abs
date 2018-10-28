@@ -13,9 +13,10 @@
 
 
 
-%  last updated: jen, 2018 Oct 23
+%  last updated: jen, 2018 Oct 28
 
-%  commit: clean up script
+%  commit: ignore frames identified as noisy tracking, plot each experiment
+%          with no smoothing
 
 
 % OK let's go!
@@ -36,6 +37,9 @@ shiftType = input(prompt);
 
 specificGrowthRate = 'log2';
 specificColumn = 3; % log2 growth rate
+xmin = -0.5;
+xmax = 3.5;
+
 
 prompt = 'Enter time per bin in seconds as double (i.e. 25): ';
 timePerBin = input(prompt);
@@ -48,9 +52,9 @@ clear prompt
 %% Part B. overlay up or downshift data
 
 % 0. initialize smoothing parameters
-order = 2;        % Use sgolay to smooth the signal, with 7-sample frames and 2nd-order polynomials. 
-framelength = 7; 
-b = sgolay(order,framelength);
+%order = 2;        % Use sgolay to smooth the signal, with 7-sample frames and 2nd-order polynomials. 
+%framelength = 7; 
+%b = sgolay(order,framelength);
 
 
 % 1. create array of experiments of interest, then loop through each
@@ -137,24 +141,6 @@ for e = 1:length(exptArray)
     
      
     % 8. isolate selected specific growth rate
-    if strcmp(specificGrowthRate,'raw') == 1
-        specificColumn = 1;         % for selecting appropriate column in growthRates
-        xmin = -5;                  % lower limit for plotting x axis
-        xmax = 25;                  % upper limit for plotting x axis
-    elseif strcmp(specificGrowthRate,'norm') == 1
-        specificColumn = 2;
-        xmin = -1;
-        xmax = 3;
-    elseif strcmp(specificGrowthRate,'log2') == 1
-        specificColumn = 3;
-        xmin = -0.5;
-        xmax = 3.5;
-    elseif strcmp(specificGrowthRate,'lognorm') == 1
-        specificColumn = 4;
-        xmin = -0.5;
-        xmax = 1;
-    end
-    
     growthRt = growthRates_trim2(:,specificColumn);
     
     
@@ -289,22 +275,22 @@ for e = 1:length(exptArray)
         title(strcat('response to upshift, binned every (',num2str(timePerBin),') sec'))
         
         
-        figure(2)   % upshift, smoothed
-        x = upshift_growth;
-        
-        % Compute the steady-state portion of the signal by convolving it with the center row of b.
-        ycenter = conv(x,b((framelength+1)/2,:),'valid');
-        
-        % Compute the transients.
-        % Use the last rows of b for the startup and the first rows of b for the terminal.
-        ybegin = b(end:-1:(framelength+3)/2,:) * x(framelength:-1:1);
-        yend = b((framelength-1)/2:-1:1,:) * x(end:-1:end-(framelength-1));
-        
-        % Concatenate the transients and the steady-state portion to generate the complete smoothed signal.
-        % Plot the original signal and the Savitzky-Golay estimate.
-        y = [ybegin; ycenter; yend];
-        plot(upshift_times,y,'Color',color,'LineWidth',1,'Marker','.')
-        hold on
+%         figure(2)   % upshift, smoothed
+%         x = upshift_growth;
+%         
+%         % Compute the steady-state portion of the signal by convolving it with the center row of b.
+%         ycenter = conv(x,b((framelength+1)/2,:),'valid');
+%         
+%         % Compute the transients.
+%         % Use the last rows of b for the startup and the first rows of b for the terminal.
+%         ybegin = b(end:-1:(framelength+3)/2,:) * x(framelength:-1:1);
+%         yend = b((framelength-1)/2:-1:1,:) * x(end:-1:end-(framelength-1));
+%         
+%         % Concatenate the transients and the steady-state portion to generate the complete smoothed signal.
+%         % Plot the original signal and the Savitzky-Golay estimate.
+%         y = [ybegin; ycenter; yend];
+%         plot(upshift_times,y,'Color',color,'LineWidth',1,'Marker','.')
+%         hold on
         
         
     else % downshift
@@ -330,22 +316,22 @@ for e = 1:length(exptArray)
         
         
         
-        figure(4)   % downshift, smoothed
-        x = downshift_growth;
-        
-        % Compute the steady-state portion of the signal by convolving it with the center row of b.
-        ycenter = conv(x,b((framelength+1)/2,:),'valid');
-        
-        % Compute the transients.
-        % Use the last rows of b for the startup and the first rows of b for the terminal.
-        ybegin = b(end:-1:(framelength+3)/2,:) * x(framelength:-1:1);
-        yend = b((framelength-1)/2:-1:1,:) * x(end:-1:end-(framelength-1));
-        
-        % Concatenate the transients and the steady-state portion to generate the complete smoothed signal.
-        % Plot the original signal and the Savitzky-Golay estimate.
-        y = [ybegin; ycenter; yend];
-        plot(downshift_times,y,'Color',color,'LineWidth',1,'Marker','.')
-        hold on
+%         figure(4)   % downshift, smoothed
+%         x = downshift_growth;
+%         
+%         % Compute the steady-state portion of the signal by convolving it with the center row of b.
+%         ycenter = conv(x,b((framelength+1)/2,:),'valid');
+%         
+%         % Compute the transients.
+%         % Use the last rows of b for the startup and the first rows of b for the terminal.
+%         ybegin = b(end:-1:(framelength+3)/2,:) * x(framelength:-1:1);
+%         yend = b((framelength-1)/2:-1:1,:) * x(end:-1:end-(framelength-1));
+%         
+%         % Concatenate the transients and the steady-state portion to generate the complete smoothed signal.
+%         % Plot the original signal and the Savitzky-Golay estimate.
+%         y = [ybegin; ycenter; yend];
+%         plot(downshift_times,y,'Color',color,'LineWidth',1,'Marker','.')
+%         hold on
 
     end
     clear x y ycenter ybegin yend color
@@ -362,9 +348,9 @@ axis([numPreshiftBins*-1*timePerBin_min,80,xmin,xmax])
 %% Part C. curves for single shift data
 
 % 0. initialize smoothing parameters
-order = 2;        % Use sgolay to smooth the signal, with 35-sample frames and 2nd-order polynomials. 
-framelength = 7; 
-b = sgolay(order,framelength);
+%order = 2;        % Use sgolay to smooth the signal, with 35-sample frames and 2nd-order polynomials. 
+%framelength = 7; 
+%b = sgolay(order,framelength);
 
 
 % 1. create array of experiments of interest, then loop through each
@@ -374,14 +360,27 @@ else
     exptArray = [25,26,27];
 end
 
-counter = 0;  ..... % keep counter value from part B and continue
+%counter = 0;  % keep counter value from part B and continue
 for e_shift = 1:length(exptArray)
     
     counter = counter + 1;
     
     % 2. initialize experiment meta data
-    index = exptArray(e_shift);                               % previous, dataIndex(e);
+    index = exptArray(e_shift); 
     date = storedMetaData{index}.date;
+    
+    % define which frames to ignore (noisy tracking)
+    if strcmp(date,'2018-06-15') == 1
+        ignoredFrames = [112,113,114];
+    elseif strcmp(date,'2018-08-01') == 1
+        ignoredFrames = [94,95];
+    elseif strcmp(date,'2018-08-09') == 1
+        ignoredFrames = [115,116,117];
+    else
+        ignoredFrames = [];
+    end
+    
+    
     timescale = storedMetaData{index}.timescale;
     bubbletime = storedMetaData{index}.bubbletime;
     expType = storedMetaData{index}.experimentType;
@@ -455,21 +454,29 @@ for e_shift = 1:length(exptArray)
     growthRt = growthRates_trim2(:,specificColumn);
     % specificColumn is already defined in Part B.
     % not re-defining it here ensures that we use the same metric between both
-    
+    clear growthRates_trim1 growthRates_trim2
     
 
     
     % 10. isolate corrected timestamp
     correctedTime = conditionData_trim2(:,22); % col 22 = timestamps corrected for signal lag
-    clear D5 T isDrop 
+    clear D5 T isDrop conditionData_trim1
     
     
     
     
-    % 11. remove nans from data analysis
-    growthRt_noNaNs = growthRt(~isnan(growthRt),:);
-    correctedTime_noNans = correctedTime(~isnan(growthRt),:);
-    clear growthRt correctedTime
+    % 11. assign NaN to all growth rates associated with frames to ignore
+    frameNum = conditionData_trim2(:,16); % col 16 = original frame number
+    growthRt_ignorant = growthRt;
+    for fr = 1:length(ignoredFrames)
+        growthRt_ignorant(frameNum == ignoredFrames(fr),1) = NaN;
+    end
+    
+    
+    % 12. remove nans from data analysis
+    growthRt_noNaNs = growthRt_ignorant(~isnan(growthRt_ignorant),:);
+    correctedTime_noNans = correctedTime(~isnan(growthRt_ignorant),:);
+    clear growthRt growthRt_ignorant correctedTime frameNum
     
     
     
@@ -543,23 +550,23 @@ for e_shift = 1:length(exptArray)
         title(strcat('response to upshift, binned every (',num2str(timePerBin),') sec'))
         
         
-        figure(2)   % upshift, smoothed
-        x = upshift_growth;
-        
-        % Compute the steady-state portion of the signal by convolving it with the center row of b.
-        ycenter = conv(x,b((framelength+1)/2,:),'valid');
-        
-        
-        % Compute the transients.
-        % Use the last rows of b for the startup and the first rows of b for the terminal.
-        ybegin = b(end:-1:(framelength+3)/2,:) * x(framelength:-1:1);
-        yend = b((framelength-1)/2:-1:1,:) * x(end:-1:end-(framelength-1));
-        
-        % Concatenate the transients and the steady-state portion to generate the complete smoothed signal.
-        % Plot the original signal and the Savitzky-Golay estimate.
-        y = [ybegin; ycenter; yend];
-        plot(upshift_times,y,'Color',color,'LineWidth',1,'Marker','.')
-        hold on
+%         figure(2)   % upshift, smoothed
+%         x = upshift_growth;
+%         
+%         % Compute the steady-state portion of the signal by convolving it with the center row of b.
+%         ycenter = conv(x,b((framelength+1)/2,:),'valid');
+%         
+%         
+%         % Compute the transients.
+%         % Use the last rows of b for the startup and the first rows of b for the terminal.
+%         ybegin = b(end:-1:(framelength+3)/2,:) * x(framelength:-1:1);
+%         yend = b((framelength-1)/2:-1:1,:) * x(end:-1:end-(framelength-1));
+%         
+%         % Concatenate the transients and the steady-state portion to generate the complete smoothed signal.
+%         % Plot the original signal and the Savitzky-Golay estimate.
+%         y = [ybegin; ycenter; yend];
+%         plot(upshift_times,y,'Color',color,'LineWidth',1,'Marker','.')
+%         hold on
         
         
     else
@@ -587,38 +594,38 @@ for e_shift = 1:length(exptArray)
         
         
 
-        figure(4)   % downshift, smoothed
-        
-        preDownshift_growth = preDownshift_growth_gapped(preDownshift_growth_gapped > 0);
-        postDownshift_growth = postDownshift_growth_single(postDownshift_growth_single > 0);
-        
-        order = 2;        % Use sgolay to smooth the signal, with 35-sample frames and 2nd-order polynomials. 
-        framelength = 9; 
-        b = sgolay(order,framelength);
-        
-        x_pre = preDownshift_growth;
-        ycenter_pre = conv(x_pre,b((framelength+1)/2,:),'valid');
-        ybegin_pre = b(end:-1:(framelength+3)/2,:) * x_pre(framelength:-1:1);
-        yend_pre = b((framelength-1)/2:-1:1,:) * x_pre(end:-1:end-(framelength-1));
-        y_pre = [ybegin_pre; ycenter_pre; yend_pre];
-       
-        
-        order = 2;        % Use sgolay to smooth the signal, with 35-sample frames and 2nd-order polynomials. 
-        framelength = 19; 
-        b = sgolay(order,framelength);
-        
-        x_post = postDownshift_growth;
-        ycenter_post = conv(x_post,b((framelength+1)/2,:),'valid');
-        ybegin_post = b(end:-1:(framelength+3)/2,:) * x_post(framelength:-1:1);
-        yend_post = b((framelength-1)/2:-1:1,:) * x_post(end:-1:end-(framelength-1));
-        y_post = [ybegin_post; ycenter_post; yend_post];
-        
-        
-        y = [y_pre;y_post];
-        
-        %plot(downshift_times,y,'Color',color,'LineWidth',1,'Marker','.')
-        plot(downshift_times,y,'LineWidth',1,'Marker','.')
-        hold on
+%         figure(4)   % downshift, smoothed
+%         
+%         preDownshift_growth = preDownshift_growth_gapped(preDownshift_growth_gapped > 0);
+%         postDownshift_growth = postDownshift_growth_single(postDownshift_growth_single > 0);
+%         
+%         order = 2;        % Use sgolay to smooth the signal, with 35-sample frames and 2nd-order polynomials. 
+%         framelength = 9; 
+%         b = sgolay(order,framelength);
+%         
+%         x_pre = preDownshift_growth;
+%         ycenter_pre = conv(x_pre,b((framelength+1)/2,:),'valid');
+%         ybegin_pre = b(end:-1:(framelength+3)/2,:) * x_pre(framelength:-1:1);
+%         yend_pre = b((framelength-1)/2:-1:1,:) * x_pre(end:-1:end-(framelength-1));
+%         y_pre = [ybegin_pre; ycenter_pre; yend_pre];
+%        
+%         
+%         order = 2;        % Use sgolay to smooth the signal, with 35-sample frames and 2nd-order polynomials. 
+%         framelength = 19; 
+%         b = sgolay(order,framelength);
+%         
+%         x_post = postDownshift_growth;
+%         ycenter_post = conv(x_post,b((framelength+1)/2,:),'valid');
+%         ybegin_post = b(end:-1:(framelength+3)/2,:) * x_post(framelength:-1:1);
+%         yend_post = b((framelength-1)/2:-1:1,:) * x_post(end:-1:end-(framelength-1));
+%         y_post = [ybegin_post; ycenter_post; yend_post];
+%         
+%         
+%         y = [y_pre;y_post];
+%         
+%         %plot(downshift_times,y,'Color',color,'LineWidth',1,'Marker','.')
+%         plot(downshift_times,y,'LineWidth',1,'Marker','.')
+%         hold on
         
         
     end
@@ -629,7 +636,7 @@ end
 
 xlabel('time (min)')
 ylabel(strcat('growth rate: (', specificGrowthRate,')'))
-axis([numPreshiftBins*-1*timePerBin_min,200,xmin,xmax])
+axis([numPreshiftBins*-1*timePerBin_min,160,xmin,xmax])
 
 
 
