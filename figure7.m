@@ -24,11 +24,9 @@
 %      13. repeat for all experiments 
 
 
-%  last updated: jen, 2018 October 23
+%  last updated: jen, 2018 October 30
 
-%  commit: re-plot figure7 for all final 1x upshift and downshift
-%          replicates and determine time of noisy(?) peaks
-
+%  commit: re-plot 2018-08-07 for juani to compare
 
 % OK let's go!
 
@@ -55,7 +53,7 @@ clear prompt
 
 %%
 % 1. create array of experiments of interest, then loop through each:
-exptArray = [21,22,26,27]; % use corresponding dataIndex values
+exptArray = 25; % use corresponding dataIndex values
 
 for e = 1:length(exptArray)
     
@@ -71,9 +69,7 @@ for e = 1:length(exptArray)
     
     
     
-    % 3. load measured experiment data
-    %for wthresh = 1:2
-    
+    % 3. load measured experiment data    
     experimentFolder = strcat('/Users/jen/Documents/StockerLab/Data/LB/',date);
     cd(experimentFolder)
     if strcmp(date,'2017-11-12') == 1
@@ -92,7 +88,7 @@ for e = 1:length(exptArray)
     
     
     % 5. build data matrix from specified condition
-    for condition = 1%:length(bubbletime)
+    for condition = 1:length(bubbletime)
         
         xy_start = storedMetaData{index}.xys(condition,1);
         xy_end = storedMetaData{index}.xys(condition,end);
@@ -180,37 +176,32 @@ for e = 1:length(exptArray)
         % 13. plot growth rate over time
         palette = {'DodgerBlue','Indigo','GoldenRod','FireBrick','LimeGreen','MediumPurple'};
         
-        %if wthresh == 1
+
         color = rgb(palette(condition));
-        %else
-        %    color = rgb(palette(condition)) * 0.2;
-        %end
         xmark = '.';
-%         
-%         figure(e)
-%         %         errorbar((1:length(bin_means))/binsPerHour,bin_means,bin_sems,'Color',color)
-%         %         hold on
-%         plot((1:length(bin_means))/binsPerHour,bin_means,'Color',color,'Marker',xmark)
-%         hold on
-%         grid on
-%         %axis([0,10.1,xmin,xmax])
-%         axis([1.8,8.2,-0.1,3.4])
-%         xlabel('Time (hr)')
-%         ylabel('Growth rate')
-%         title(strcat(date,': (',specificGrowthRate,')'))
-%         
+        
+        figure(e)
+        plot((1:length(bin_means))/binsPerHour,bin_means,'Color',color,'Marker',xmark)
+        hold on
+        grid on
+        axis([0,10.1,xmin,xmax])
+        %axis([1.8,8.2,-0.1,3.4])
+        xlabel('Time (hr)')
+        ylabel('Growth rate')
+        title(strcat(date,': (',specificGrowthRate,')'))
+        
         %end
     end
     
     
     % 14. save plots in active folder
-    %cd('/Users/jen/Documents/StockerLab/Data_analysis/currentPlots/')
-    %plotName = strcat('figure7-',specificGrowthRate,'-',date,'-',num2str(specificBinning),'minbins-variedWidth-constjiggle-allNOTonlyFull');
-    %saveas(gcf,plotName,'epsc')
+    cd('/Users/jen/Documents/StockerLab/Data_analysis/currentPlots/')
+    plotName = strcat('figure7-',specificGrowthRate,'-',date,'-',num2str(specificBinning),'minbins-constWidth');
+    saveas(gcf,plotName,'epsc')
     
-    %close(gcf)
-    
+    close(gcf)
     clc
+    
     % 15. repeat for all experiments
 end
 
