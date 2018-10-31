@@ -57,6 +57,12 @@ TABLE of CONTENTS:
 43. computing T-statistic, assuming noise from day-to-day variability
 
 50. volume vs time, selected individual tracks from all conditions
+51.
 
+52. plot response of each replicate to upshift or downshift
+53. plot mean response of all replicates to shifts
+54. quanitify time to stabilization and stabilized gr value for upshifts
+
+70. growth rate vs time for individual xys from a given condition, one expt
 
 
