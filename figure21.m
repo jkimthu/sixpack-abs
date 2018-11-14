@@ -1,7 +1,7 @@
 %% figure 21
 
 
-% Goal: Monod plot of growth rate vs nutrient concentration,
+% Goal: Monod plot of growth rate vs nutrient concentration
 
 
 % Strategy:
@@ -14,10 +14,9 @@
 %       5. call data from structures for plotting
 
 
-% Last edit: jen, 2018 October 16
+% Last edit: jen, 2018 November 14
 
-% Commit: add variant of monod which beeswarms clusters of very similar
-%         points
+% Commit: add figure2 which plots monod on linear x axis
 
 
 % OK let's go!
@@ -285,14 +284,28 @@ for e = 1:length(exptArray)
         plot(log(concentration(c)), experiment_gr_data{c}.mean,'Marker',xmark,'MarkerSize',10,'Color',color)
         hold on
         
+        figure(2)
+        errorbar(concentration(c), experiment_gr_data{c}.mean, experiment_gr_data{c}.sem,'Color',color);
+        hold on
+        plot(concentration(c), experiment_gr_data{c}.mean,'Marker',xmark,'MarkerSize',10,'Color',color)
+        hold on
         
         
     end
+    
+    figure(1)
     ylabel(strcat('growth rate: (',specificGrowthRate',')'))
     xlabel('log fold LB dilution')
     title(strcat('Population-averaged growth rate vs log LB dilution'))
     axis([-10,1,ymin,ymax])
      
+    figure(2)
+    ylabel(strcat('growth rate: (',specificGrowthRate',')'))
+    xlabel('fraction full LB')
+    title(strcat('Population-averaged growth rate vs log LB dilution'))
+    axis([0,1,ymin,ymax])
+    
+    
 end
 
 %% plot spread
