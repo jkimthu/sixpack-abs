@@ -14,9 +14,9 @@
 %       5. call data from structures for plotting
 
 
-% Last edit: jen, 2018 November 14
+% Last edit: jen, 2018 November 15
 
-% Commit: add figure2 which plots monod on linear x axis
+% Commit: minor tweak of axis range 
 
 
 % OK let's go!
@@ -297,13 +297,13 @@ for e = 1:length(exptArray)
     ylabel(strcat('growth rate: (',specificGrowthRate',')'))
     xlabel('log fold LB dilution')
     title(strcat('Population-averaged growth rate vs log LB dilution'))
-    axis([-10,1,ymin,ymax])
+    axis([-10,1.1,ymin,ymax])
      
     figure(2)
     ylabel(strcat('growth rate: (',specificGrowthRate',')'))
     xlabel('fraction full LB')
     title(strcat('Population-averaged growth rate vs log LB dilution'))
-    axis([0,1,ymin,ymax])
+    axis([0,1.1,ymin,ymax])
     
     
 end
