@@ -26,10 +26,13 @@
 %          values
 
 
+%       CURRENT VERSION: normalizes to average
+%                        uses all data, not only full cell cycles. same
+%                        data used in figure21.m
 
-%  Last edit: Jen Nguyen, 2018 Oct 23
-%  Commit: use all data, not only full cell cycles. current expectations
-%          plot in manuscript as of commit date
+
+%  Last edit: Jen Nguyen, 2018 Nov 15
+%  Commit: edit comments for clarity
 
 
 
@@ -120,7 +123,7 @@ ylabel('mean dV/dt in high')
 %       4. plot G_data by timescale
 
 
-% 0. initialize meta data and dV/dt stats
+% 0. initialize meta data and growth rate stats
 clear
 clc
 
