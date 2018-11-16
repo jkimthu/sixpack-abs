@@ -14,28 +14,24 @@
 
 %  Part B:
 %     1. for all experiments in dataset:
-%           2. collect experiment date and exclude outliers (2017-10-31)
-%           3. initialize experiment meta data
-%           4. load measured data
-%           5. gather data for specified condition
-%           6. isolate volume and timestamp (corrected for signal lag) data of interest
-%           7. remove data not in stabilized region
-%           8. remove zeros from mu data (always bounding start and end of tracks)
-%           9. bin volumes by 20th of period
-%          10. calculate average volume and s.e.m. per timebin
+%           2. initialize experiment meta data
+%           3. load measured data
+%           4. gather specified condition data
+%           5. isolate parameters for growth rate calculations
+%           6. calculate growth rate
+%           7. isolate data to stabilized regions of growth
+%           8. isolate selected specific growth rate
+%           9. bin growth rates by 20th of period
+%          10. calculate average growth rate per timebin
 %          11. plot
 %    12. repeat for all experiments
 
-%  Part C:
-%    13. save volume stats into stored data structure
 
 
+%  Last edit: jen, 2018 November 16
+%  commit: single period plots adjusting growth rate timestamps to in
+%          between the bounding timepoints, instead of assigning to the final one
 
-
-
-
-%  Last edit: jen, 2018 October 17
-%  commit: single period plots with only 15 and 60 min timescales
 
 % Okie, go go let's go!
 
@@ -57,7 +53,7 @@ specificGrowthRate = input(prompt);
 cd('/Users/jen/Documents/StockerLab/Data_analysis/')
 load('storedMetaData.mat')
 
-exptArray = [9,10,11,12,13,14,15]; % list experiments by index
+exptArray = [5,6,7,9,10,11,12,13,14,15]; % list experiments by index
 
 
 %% (B) bin volumes into 20th of period timescale
@@ -87,7 +83,7 @@ for e = 1:length(exptArray)
     load(filename,'D','D5','T');
     
     
-    % 5. gather specified condition data
+    % 4. gather specified condition data
     condition = 1; % 1 = fluctuating; 3 = ave nutrient condition
     xy_start = storedMetaData{index}.xys(condition,1);
     xy_end = storedMetaData{index}.xys(condition,end);
@@ -95,7 +91,7 @@ for e = 1:length(exptArray)
     clear D D5 T xy_start xy_end xys
      
     
-    % 6. isolate parameters for growth rate calculations
+    % 5. isolate parameters for growth rate calculations
     volumes = conditionData(:,11);        % col 11 = calculated va_vals (cubic um)
     timestamps_sec = conditionData(:,2);  % col 2  = timestamp in seconds
     isDrop = conditionData(:,4);          % col 4  = isDrop, 1 marks a birth event
@@ -103,11 +99,12 @@ for e = 1:length(exptArray)
     trackNum = conditionData(:,20);       % col 20 = track number (not ID from particle tracking)
     
     
-    % 7. calculate growth rate
+    % 6. calculate growth rate
     growthRates = calculateGrowthRate(volumes,timestamps_sec,isDrop,curveFinder,trackNum);
     clear trackNum curveFinder isDrop volumes
     
-    % 8. isolate data to stabilized regions of growth
+    
+    % 7. isolate data to stabilized regions of growth
     %    NOTE: errors (excessive negative growth rates) occur at trimming
     %          point if growth rate calculation occurs AFTER time trim.
     
@@ -133,7 +130,7 @@ for e = 1:length(exptArray)
    
 
     
-    % 9. isolate selected specific growth rate
+    % 8. isolate selected specific growth rate
     if strcmp(specificGrowthRate,'raw') == 1
         specificColumn = 1;         % for selecting appropriate column in growthRates
     elseif strcmp(specificGrowthRate,'norm') == 1
@@ -150,26 +147,37 @@ for e = 1:length(exptArray)
     
     
     
-    % 9. bin growth rates by 20th of period
+    % 9. bin growth rates by 20th of period, first assigning growth rate to
+    %    time value of the middle of two timepoints (not end value)!
+    timestep_sec = 60+57;
     timeInSeconds = conditionData_trim2(:,22);  % col 22 = signal corrected time
     if strcmp(date,'2017-10-10') == 1
         timeInSeconds = conditionData_trim2(:,2);
     end
-    timeInPeriods = timeInSeconds/timescale;    % units = sec/sec
+    
+    timeInSeconds_middle = timeInSeconds - (timestep_sec/2);
+    timeInPeriods = timeInSeconds_middle/timescale;    % units = sec/sec
     timeInPeriods_floors = floor(timeInPeriods);
     timeInPeriodFraction = timeInPeriods - timeInPeriods_floors;
     assignedBin = timeInPeriodFraction * binsPerPeriod;
     assignedBin = ceil(assignedBin);
+
+%     timeInSeconds = conditionData_trim2(:,22);  % col 22 = signal corrected time
+%     if strcmp(date,'2017-10-10') == 1
+%         timeInSeconds = conditionData_trim2(:,2);
+%     end
+%     timeInPeriods = timeInSeconds/timescale;    % units = sec/sec
+%     timeInPeriods_floors = floor(timeInPeriods);
+%     timeInPeriodFraction = timeInPeriods - timeInPeriods_floors;
+%     assignedBin = timeInPeriodFraction * binsPerPeriod;
+%     assignedBin = ceil(assignedBin);
     
     growthRt_binned = accumarray(assignedBin,growthRt,[],@(x) {x});
     clear timeInSeconds timeInPeriods timeInPeriodFraction assignedBin
     
     
-    % 10.  calculate average volume and s.e.m. per timebin
+    % 10. calculate average growth rate per timebin
     growthRt_means(exptCounter,:) = cellfun(@nanmean,growthRt_binned);
-    %growthRt_counts(exptCounter,:) = cellfun(@length,growthRt_binned);
-    %growthRt_std(exptCounter,:) = cellfun(@std,growthRt_binned);
-    %growthRt_sems(exptCounter,:) = growthRt_std(exptCounter,:)./sqrt(growthRt_counts(exptCounter,:));
     
     
     % 11. plot
@@ -189,7 +197,7 @@ for e = 1:length(exptArray)
     plot(growthRt_means(exptCounter,:),'Color',color,'Marker',shape)
     hold on
     grid on
-    title('growth rate: log2 mean + s.e.m.')
+    title('growth rate: log2 mean')
     xlabel('period bin (1/20)')
     ylabel('growth rate (1/hr)')
     axis([0,21,-1,4])
@@ -198,13 +206,5 @@ for e = 1:length(exptArray)
 
 % 12. repeat for all experiments
 end
-
-
-%% (C) save volume stats into stored data structure
-
-% last saved: 2018 October 15
-cd('/Users/jen/Documents/StockerLab/Data_analysis/')
-save('volumes_low.mat','meanVolume','countVolume','stdVolume','semVolume','datesForLegend')
-
 
 
