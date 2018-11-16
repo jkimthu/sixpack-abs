@@ -31,8 +31,9 @@
 %                        data used in figure21.m
 
 
-%  Last edit: Jen Nguyen, 2018 Nov 15
-%  Commit: edit comments for clarity
+%  Last edit: Jen Nguyen, 2018 Nov 16
+%  Commit: correction in raw values - remove manual division of log(2), as
+%          it is already included in growth rates
 
 
 
@@ -167,10 +168,10 @@ for e = 1:length(exptArray)
     high = 4;
     
     % growth rate data
-    flucRates(counter,fluc) = growthRateData{index}{1,fluc}.mean/log(2);
-    stableRates(counter,low) = growthRateData{index}{1,low}.mean/log(2);
-    stableRates(counter,ave) = growthRateData{index}{1,ave}.mean/log(2);
-    stableRates(counter,high) = growthRateData{index}{1,high}.mean/log(2);
+    flucRates(counter,fluc) = growthRateData{index}{1,fluc}.mean;%/log(2);
+    stableRates(counter,low) = growthRateData{index}{1,low}.mean;%/log(2);
+    stableRates(counter,ave) = growthRateData{index}{1,ave}.mean;%/log(2);
+    stableRates(counter,high) = growthRateData{index}{1,high}.mean;%/log(2);
     
     timescales_perG(counter) = timescale;
     dates_perG{counter} = date;
