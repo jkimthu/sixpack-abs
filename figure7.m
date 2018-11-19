@@ -24,9 +24,9 @@
 %      13. repeat for all experiments 
 
 
-%  last updated: jen, 2018 October 30
+%  last updated: jen, 2018 November 18
 
-%  commit: re-plot 2018-08-07 for juani to compare
+%  commit: plot 2017-11-09 data with log2 growth rate
 
 % OK let's go!
 
@@ -53,7 +53,7 @@ clear prompt
 
 %%
 % 1. create array of experiments of interest, then loop through each:
-exptArray = 25; % use corresponding dataIndex values
+exptArray = 18; % use corresponding dataIndex values
 
 for e = 1:length(exptArray)
     
