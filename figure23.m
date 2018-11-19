@@ -28,9 +28,8 @@
 
 
 
-%  Last edit: jen, 2018 November 16
-%  commit: single period plots adjusting growth rate timestamps to in
-%          between the bounding timepoints, instead of assigning to the final one
+%  Last edit: jen, 2018 November 17
+%  commit: repeat data plotted at period fraction = 1 at 0 as well
 
 
 % Okie, go go let's go!
@@ -177,8 +176,9 @@ for e = 1:length(exptArray)
     
     
     % 10. calculate average growth rate per timebin
-    growthRt_means(exptCounter,:) = cellfun(@nanmean,growthRt_binned);
-    
+    %growthRt_means(exptCounter,:) = cellfun(@nanmean,growthRt_binned);
+    growthRt_means = cellfun(@nanmean,growthRt_binned);
+    growthRt_means_zeroed(exptCounter,:) = [growthRt_means(end); growthRt_means];
     
     % 11. plot
     if timescale == 30
@@ -194,17 +194,15 @@ for e = 1:length(exptArray)
     shape = '.';
 
     figure(1)
-    plot(growthRt_means(exptCounter,:),'Color',color,'Marker',shape)
+    plot(growthRt_means_zeroed(exptCounter,:),'Color',color,'Marker',shape)
     hold on
     grid on
     title('growth rate: log2 mean')
     xlabel('period bin (1/20)')
     ylabel('growth rate (1/hr)')
-    axis([0,21,-1,4])
+    axis([1,21,-1,4])
     legend(datesForLegend)
     
 
 % 12. repeat for all experiments
 end
-
-
