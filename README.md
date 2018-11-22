@@ -34,8 +34,10 @@ TABLE of CONTENTS:
 23. single period: growth rate vs nutrient phase
 
 24. violin plots with dV/dt calculation performed BEFORE 3hr trim
-25. subsampling growth rates in time bins	
+25. subsampling growth rates in time bins
+
 26. pdf of growth rates normalized by pop ave
+
 27. timescale specific responses in growth rate to upshifts & downshifts
 28. added volume vs birth volume, Taheri	
 29. violin plots to compare distributions between fluc and stable
@@ -50,7 +52,8 @@ TABLE of CONTENTS:
 37. size at birth over time
 38. added width vs. birth width, Taheri-like
 39. interdivision time over time
-40. 
+40. pdf of interdivision times normalized by pop ave
+
 41. growth rate response to single upshift vs repeated fluctuations
 
 42. computing T-statistic, assuming noise from single cell variability 
