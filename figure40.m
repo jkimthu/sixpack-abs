@@ -58,7 +58,7 @@ binSize = 5;          % min
 
 %%
 % 1. create array of experiments of interest, then loop through each:
-exptArray = [2,3,4]; % use corresponding dataIndex values
+exptArray = [13,14,15]; % use corresponding dataIndex values
 
 
 for e = 1:length(exptArray)
@@ -208,7 +208,7 @@ end
 cd('/Users/jen/Documents/StockerLab/Data_analysis/currentPlots/')
 
 figure(1)
-plotName = strcat('figure40-',num2str(timescale),'interdivT-rawPDF');
+plotName = strcat('figure40-',num2str(timescale),'-interdivT-rawPDF');
 saveas(gcf,plotName,'epsc')
 
 

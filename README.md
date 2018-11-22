@@ -52,9 +52,10 @@ TABLE of CONTENTS:
 37. size at birth over time
 38. added width vs. birth width, Taheri-like
 39. interdivision time over time
-40. pdf of interdivision times normalized by pop ave
 
-41. growth rate response to single upshift vs repeated fluctuations
+40. pdf of interdivision times, raw
+
+41. pdf of birth volumes times, raw
 
 42. computing T-statistic, assuming noise from single cell variability 
 43. computing T-statistic, assuming noise from day-to-day variability
