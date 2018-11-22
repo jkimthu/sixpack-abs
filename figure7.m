@@ -25,9 +25,9 @@
 %      15. repeat for all experiments 
 
 
-%  last updated: jen, 2018 November 21
+%  last updated: jen, 2018 November 22
 
-%  commit: re-plot single upshift data, ignoring noise from loss of focus
+%  commit: automate correct filename for each type of experiment
 
 
 % OK let's go!
@@ -100,6 +100,8 @@ for e = 1:length(exptArray)
         filename = strcat('lb-control-',date,'-width1p4-jiggle-0p5.mat');
     elseif strcmp(date,'2017-09-26') == 1
         filename = 'lb-monod-2017-09-26-jiggle-c12-0p1-c3456-0p5-bigger1p8.mat';
+    elseif strcmp(expType,'origFluc') == 1
+        filename = strcat('lb-fluc-',date,'-c123-width1p4-c4-1p7-jiggle-0p5.mat');
     else
         filename = strcat('lb-fluc-',date,'-width1p7-jiggle-0p5.mat');
         % single upshift and downshift data only uses larger width thresh
