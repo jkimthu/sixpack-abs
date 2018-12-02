@@ -25,9 +25,9 @@
 %      15. repeat for all experiments 
 
 
-%  last updated: jen, 2018 November 22
+%  last updated: jen, 2018 December 2
 
-%  commit: automate correct filename for each type of experiment
+%  commit: plot select single shifts with same time axis
 
 
 % OK let's go!
@@ -75,7 +75,7 @@ ymax = 0;
 
 %%
 % 1. create array of experiments of interest, then loop through each:
-exptArray = [21,22,26,27,]; % use corresponding dataIndex values
+exptArray = [22,26]; % use corresponding dataIndex values
 
 for e = 1:length(exptArray)
     
@@ -149,7 +149,7 @@ for e = 1:length(exptArray)
         
 
         % 8. truncate data to non-erroneous (e.g. bubbles) timestamps
-        maxTime = bubbletime(condition);
+        maxTime = 8.2;%bubbletime(condition);
         timestamps_hr = conditionData(:,2)/3600; % time in seconds converted to hours
         
         if maxTime > 0
@@ -238,7 +238,7 @@ for e = 1:length(exptArray)
         plot((1:length(bin_means))/binsPerHour,bin_means,'Color',color,'Marker',xmark)
         hold on
         grid on
-        axis([0,ymax+0.1,xmin,xmax])
+        axis([2,ymax+0.1,xmin,xmax])
         %axis([1.8,8.2,-0.1,3.4])
         xlabel('Time (hr)')
         ylabel('Growth rate')
@@ -250,7 +250,7 @@ for e = 1:length(exptArray)
     
     % 14. save plots in active folder
     cd('/Users/jen/Documents/StockerLab/Data_analysis/currentPlots/')
-    plotName = strcat('figure7-',specificGrowthRate,'-',date,'-',num2str(specificBinning),'minbins-ignoredPeaks');
+    plotName = strcat('figure7-',specificGrowthRate,'-',date,'-',num2str(specificBinning),'minbins-ignoredPeaks-maxTime8p2');
     saveas(gcf,plotName,'epsc')
     
     close(gcf)
