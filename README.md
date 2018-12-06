@@ -2,36 +2,67 @@
 Feeling sore? Keep going. Correlations between the many many parameters of growth.
 
 
+
+* * used in manuscript one * *
+
+50. volume vs time, selected individual tracks from all conditions			% 2A
+7.  growth rate vs time 													% 2B, supp
+23. single period: growth rate vs nutrient phase							% 2C
+
+20. monod: growth rate vs nutrient conc										% 3A
+26. pdf of growth rates normalized by pop average 							% 3B
+
+22. growth ratevs timescale: measured vs expected						   	% 4		
+
+51. plot response to upshifts												% 5A
+		i. all replicates
+	   ii. mean of replicates
+	  iii. mean and standard deviation between replicate means
+
+52. plot response to downshifts 											% 5A
+		i. all replicates
+	   ii. mean of replicates
+	  iii. mean and standard deviation between replicate means
+
+54. quantify time to stabilization and stabilized gr value for upshifts		% 5B
+
+
+
+
+
+
 TABLE of CONTENTS:
 
-1. division size vs birth size  			population
-2. inter-division time vs birth size 		population
-3. growth rate vs birth size				population
-4. division size vs birth size				single
-5. inter-division time vs birth size		single
-6. division size vs birth size				single
+1. division size vs birth size  					population
+2. inter-division time vs birth size 				population
+3. growth rate vs birth size						population
 
-7. growth rate vs time 						population
-8. birth size vs growth rate				population
-9. inter-division time vs growth rate		population
-10. birth size vs growth rate				single
-11. inter-division time vs growth rate  	single
+4. division size vs birth size, heated scatter		single				%
 
-12. volume vs nutrient phase				population
-13. fraction births vs nutrient phase		single
-14. individual volume vs time 				single
-15. size (including SA:V) vs nutrient phase population
-16. growth rate vs interdivision time 		population
+5. inter-division time vs birth size				single
+6. division size vs birth size						single
 
-17. added volume vs time 					population
-18. added volume vs birth volume			single
-19. added volume vs time 					single
+7. growth rate vs time 								population
+8. birth size vs growth rate						population
+9. inter-division time vs growth rate				population
+10. birth size vs growth rate						single
+11. inter-division time vs growth rate  			single
 
-20. monod: growth rate vs nutrient conc		population, all data
-21. monod: growth rate vs nutrient conc		population, full cycles only
-22. growth rate: measured vs expected		population
+12. volume vs nutrient phase						population
+13. fraction births vs nutrient phase				single
+14. individual volume vs time 						single
+15. size (including SA:V) vs nutrient phase 		population
+16. growth rate vs interdivision time 				population
 
-23. single period: growth rate vs nutrient phase
+17. added volume vs time 							population
+18. added volume vs birth volume					single
+19. added volume vs time 							single
+
+
+21. monod: growth rate vs nutrient conc				population, full cycles only
+22. growth rate: measured vs expected				population
+
+
 
 24. violin plots with dV/dt calculation performed BEFORE 3hr trim
 25. subsampling growth rates in time bins
@@ -60,12 +91,10 @@ TABLE of CONTENTS:
 42. computing T-statistic, assuming noise from single cell variability 
 43. computing T-statistic, assuming noise from day-to-day variability
 
-50. volume vs time, selected individual tracks from all conditions
-51.
 
-52. plot response of each replicate to upshift or downshift
-53. plot mean response of all replicates to shifts
-54. quanitify time to stabilization and stabilized gr value for upshifts
+53. plot mean response of all replicates to shifts								
+54. quantify time to stabilization and stabilized gr value for upshifts			% 5B
+55. quantify time to stabilization and stabilized gr value for downshifts 		%
 
 70. growth rate vs time for individual xys from a given condition, one expt
 
