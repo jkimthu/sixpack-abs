@@ -16,7 +16,8 @@
 
 %  last updated: jen, 2018 Dec 6
 
-%  commit: first commit for downshift response, mean of replicate means and standard dev
+%  commit: edit for easy changing of colors and exchangable ordering
+%          between parts B & C
 
 
 % OK let's go!
@@ -39,6 +40,13 @@ xmin = -0.5;
 xmax = 3.5;
 timePerBin = 75;
 
+counter = 0; % because timescales will differ between experiments
+
+% color designations
+color900 = 'DeepSkyBlue';
+color3600 = 'Navy';
+color_single = 'DarkCyan';
+
 
 %% B1. compile and plot up or downshift data for each replicate 
 
@@ -47,7 +55,6 @@ timePerBin = 75;
 exptArray = 9:15;
 
 
-counter = 0; % because timescales will differ between experiments
 for e = 1:length(exptArray)
     
     counter = counter + 1;
@@ -56,7 +63,8 @@ for e = 1:length(exptArray)
     index = exptArray(e);                               % previous, dataIndex(e);
     date = storedMetaData{index}.date;
     timescale = storedMetaData{index}.timescale;
-    timescale_vector(e) = timescale;
+    %timescale_vector(e) = timescale;
+    timescale_vector(counter) = timescale;
     
     bubbletime = storedMetaData{index}.bubbletime;
     expType = storedMetaData{index}.experimentType;
@@ -234,9 +242,9 @@ for e = 1:length(exptArray)
     timePerBin_min = timePerBin/60; % time per bin in minutes
     
     if timescale == 900
-        color = rgb('Aquamarine');
+        color = rgb(color900);
     elseif timescale == 3600
-        color = rgb('Indigo');
+        color = rgb(color3600);
     end
     
     
@@ -277,6 +285,7 @@ xlabel('time (min)')
 ylabel(strcat('growth rate: (', specificGrowthRate,')'))
 axis([numPreshiftBins*-1*timePerBin_min,80,xmin,xmax])
 
+
 %% B2. find mean and standard deviation between replicates
         
 for t = 1:2 % loop through the two timescales, 15 min and 60 min
@@ -285,10 +294,10 @@ for t = 1:2 % loop through the two timescales, 15 min and 60 min
     
     if t == 1
         timescale = 900;
-        color = rgb('Aquamarine');
+        color = rgb(color900);
     else
         timescale = 3600;
-        color = rgb('Indigo');
+        color = rgb(color3600);
     end
     
     
@@ -345,6 +354,7 @@ axis([numPreshiftBins*-1*timePerBin_min,80,xmin,xmax])
 
 clear r t color x y timescale bubbletime 
 
+
 %% C1. curves for single shift data
 
 
@@ -370,6 +380,8 @@ for e_shift = 1:length(exptArray)
     
     
     timescale = storedMetaData{index}.timescale;
+    timescale_vector(counter) = timescale;
+    
     bubbletime = storedMetaData{index}.bubbletime;
     expType = storedMetaData{index}.experimentType;
     shiftTime = storedMetaData{index}.shiftTime;        % sec
@@ -507,7 +519,7 @@ for e_shift = 1:length(exptArray)
     
     % 15. plot response in growth rate for all timescales over time
     timePerBin_min = timePerBin/60; % time per bin in minutes
-    color = rgb('DarkOliveGreen');
+    color = rgb(color_single);
     
     
     % in single shift data, not all time bins have data!
@@ -554,7 +566,7 @@ clear replicate_means replicate_means_mean replicate_means_std
 
 % extract 2d matrix of mean replicate data, with columns replicate and rows being time (period bin)
 for rep = 1:2 % two replicates for upshift and downshift as of 2018-12-04
-    col = rep + 7;
+    col = rep;
     
     curr_rep_means = binned_singles{col}(1:149);
     curr_rep_means(curr_rep_means == 0) = NaN; % make zeros NaN prior to averaging between replicates
@@ -593,8 +605,6 @@ shadedErrorBar(downshift_times,downshift_replicate_means,{@nanmean,@nanstd},'lin
 title('response to downshift, mean and std of replicate means')
 
 
-
-
 %% D1. save and close figures
 
 cd('/Users/jen/Documents/StockerLab/Data_analysis/currentPlots/')
@@ -614,3 +624,5 @@ figure(3)
 plotName = strcat('figure52-downshift-',specificGrowthRate,'-mean&std');
 saveas(gcf,plotName,'epsc')
 close(gcf)
+
+% woots!

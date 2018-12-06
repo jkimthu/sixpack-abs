@@ -16,8 +16,8 @@
 
 %  last updated: jen, 2018 Dec 6
 
-%  commit: first commit for upshift response, mean of replicate means and standard dev
-
+%  commit: edit for easy changing of colors and exchangable ordering
+%          between parts B & C
 
 % OK let's go!
 
@@ -39,6 +39,12 @@ xmin = -0.5;
 xmax = 3.5;
 timePerBin = 75;
 
+counter = 0; % because timescales will differ between experiments
+
+% color designations
+color900 = 'DeepSkyBlue';
+color3600 = 'Navy';
+color_single = 'DarkCyan';
 
 %% B1. compile and plot up or downshift data for each replicate 
 
@@ -56,7 +62,7 @@ for e = 1:length(exptArray)
     index = exptArray(e);                               % previous, dataIndex(e);
     date = storedMetaData{index}.date;
     timescale = storedMetaData{index}.timescale;
-    timescale_vector(e) = timescale;
+    timescale_vector(counter) = timescale;
     
     bubbletime = storedMetaData{index}.bubbletime;
     expType = storedMetaData{index}.experimentType;
@@ -235,9 +241,9 @@ for e = 1:length(exptArray)
     timePerBin_min = timePerBin/60; % time per bin in minutes
     
     if timescale == 900
-        color = rgb('Aquamarine');
+        color = rgb(color900);
     elseif timescale == 3600
-        color = rgb('Indigo');
+        color = rgb(color3600);
     end
     
     
@@ -283,10 +289,10 @@ for t = 1:2 % loop through the two timescales, 15 min and 60 min
     
     if t == 1
         timescale = 900;
-        color = rgb('Aquamarine');
+        color = rgb(color900);
     else
         timescale = 3600;
-        color = rgb('Indigo');
+        color = rgb(color3600);
     end
     
     
@@ -506,7 +512,7 @@ for e_shift = 1:length(exptArray)
     
     % 16. plot response in growth rate for all timescales over time
     timePerBin_min = timePerBin/60; % time per bin in minutes
-    color = rgb('DarkOliveGreen');
+    color = rgb(color_single);
 
     
     
@@ -556,7 +562,7 @@ clear replicate_means replicate_means_mean replicate_means_std
 
 % extract 2d matrix of mean replicate data, with columns replicate and rows being time (period bin)
 for rep = 1:2 % two replicates for upshift and downshift as of 2018-12-04
-    col = rep + 7;
+    col = rep;
     
     curr_rep_means = binned_singles{col}(1:149);
     curr_rep_means(curr_rep_means == 0) = NaN; % make zeros NaN prior to averaging between replicates
