@@ -25,9 +25,9 @@
 %      15. repeat for all experiments 
 
 
-%  last updated: jen, 2018 December 2
+%  last updated: jen, 2018 December 9
 
-%  commit: plot select single shifts with same time axis
+%  commit: plot new poly-lysine challenge, 2018-12-04
 
 
 % OK let's go!
@@ -75,7 +75,7 @@ ymax = 0;
 
 %%
 % 1. create array of experiments of interest, then loop through each:
-exptArray = [22,26]; % use corresponding dataIndex values
+exptArray = 19; % use corresponding dataIndex values
 
 for e = 1:length(exptArray)
     
@@ -100,6 +100,8 @@ for e = 1:length(exptArray)
         filename = strcat('lb-control-',date,'-width1p4-jiggle-0p5.mat');
     elseif strcmp(date,'2017-09-26') == 1
         filename = 'lb-monod-2017-09-26-jiggle-c12-0p1-c3456-0p5-bigger1p8.mat';
+    elseif strcmp(date,'2018-12-04') == 1
+        filename = 'lb-monod-2018-12-04-c12-width1p7-c34-width1p4-jiggle-0p5.mat';
     elseif strcmp(expType,'origFluc') == 1
         filename = strcat('lb-fluc-',date,'-c123-width1p4-c4-1p7-jiggle-0p5.mat');
     else
@@ -120,6 +122,8 @@ for e = 1:length(exptArray)
         ignoredFrames = [115,116,117];
     elseif strcmp(date,'2018-08-08') == 1
         ignoredFrames = [112,113,114];
+    else
+        ignoredFrames = [];
     end
     
     
@@ -149,7 +153,7 @@ for e = 1:length(exptArray)
         
 
         % 8. truncate data to non-erroneous (e.g. bubbles) timestamps
-        maxTime = 8.2;%bubbletime(condition);
+        maxTime = bubbletime(condition);
         timestamps_hr = conditionData(:,2)/3600; % time in seconds converted to hours
         
         if maxTime > 0
@@ -171,7 +175,7 @@ for e = 1:length(exptArray)
         
         % 10. if appropriate, assign NaN to all growth rates associated with frames to ignore
         %     else simply remove existing nans from analysis
-        if condition == 1
+        if condition == 1 && isempty(ignoredFrames) == 0
             
             
             % assign NaN to frames to ignore
@@ -215,11 +219,6 @@ for e = 1:length(exptArray)
         bin_counts = cellfun(@length,binned_growthRt);
         bin_sems = bin_stds./sqrt(bin_counts);
         
-        %if condition == 1
-        %    bin_means_compiled{e} = bin_means; % for determine where noise(?) peaks are in time
-        %    bin_times{e} = (1:length(bin_means))/binsPerHour;
-        %end
-        
         
         
         % 13. plot growth rate over time
@@ -238,8 +237,9 @@ for e = 1:length(exptArray)
         plot((1:length(bin_means))/binsPerHour,bin_means,'Color',color,'Marker',xmark)
         hold on
         grid on
-        axis([2,ymax+0.1,xmin,xmax])
-        %axis([1.8,8.2,-0.1,3.4])
+        legend('high,untreated','high,treated','low,untreated','low,treated')
+        %axis([2,ymax+0.1,xmin,xmax])
+        axis([0,10,xmin,xmax])
         xlabel('Time (hr)')
         ylabel('Growth rate')
         title(strcat(date,': (',specificGrowthRate,')'))
@@ -250,10 +250,10 @@ for e = 1:length(exptArray)
     
     % 14. save plots in active folder
     cd('/Users/jen/Documents/StockerLab/Data_analysis/currentPlots/')
-    plotName = strcat('figure7-',specificGrowthRate,'-',date,'-',num2str(specificBinning),'minbins-ignoredPeaks-maxTime8p2');
+    plotName = strcat('figure7-',specificGrowthRate,'-',date,'-',num2str(specificBinning),'minbins');
     saveas(gcf,plotName,'epsc')
     
-    close(gcf)
+    %close(gcf)
     clc
     
     % 15. repeat for all experiments
