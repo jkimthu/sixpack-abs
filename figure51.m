@@ -15,7 +15,7 @@
 
 
 
-%  last updated: jen, 2018 Jan 4
+%  last updated: jen, 2019 Jan 4
 
 %  commit: edit such that a save occurs before adding single shift condition,
 %          for animation of figures in presentations
