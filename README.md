@@ -5,15 +5,19 @@ Feeling sore? Keep going. Correlations between the many many parameters of growt
 
 * * used in manuscript one * *
 
+# figure 2
 50. volume vs time, selected individual tracks from all conditions			% 2A
 7.  growth rate vs time 													% 2B, supp
 23. single period: growth rate vs nutrient phase							% 2C
 
+# figure 3
 20. monod: growth rate vs nutrient conc										% 3A
 26. pdf of growth rates normalized by pop average 							% 3B
 
-22. growth ratevs timescale: measured vs expected						   	% 4		
+# figure 4
+22. growth rate vs timescale: measured vs expected						   	% 4		
 
+# figure 5
 51. plot response to upshifts												% 5A
 		i. all replicates
 	   ii. mean of replicates
@@ -25,7 +29,7 @@ Feeling sore? Keep going. Correlations between the many many parameters of growt
 	  iii. mean and standard deviation between replicate means
 
 54. quantify time to stabilization and stabilized gr value for upshifts		% 5B
-
+55. quanitfy time to stabilization and stabilized gr value for downshifts   % 5B
 
 
 
@@ -97,5 +101,5 @@ TABLE of CONTENTS:
 55. quantify time to stabilization and stabilized gr value for downshifts 		%
 
 70. growth rate vs time for individual xys from a given condition, one expt
-
+71. growth rate vs time for sensitivity analysis using 2018-02-01 				% supp
 
