@@ -1,13 +1,19 @@
 %% figure 54
 %
-%  Goals: calculate time to stabilization in all replicates, and mean
-%         growth rate during stable region,
-%         based on window of stabilized region that gives fit slope closest
-%         to zero.
+%  Goals: from upshift data, calculate
+%                   (1) time to stabilization and
+%                   (2) mean growth rate during stable region
+
+
+%  Strategy:
+%
+%         1. find window of stabilized region that gives fit slope closest to zero
+%         2. time until window of zero-most slope = time to stabilization 
+%         3. mean growth rate within window = mean growth rate of stabilized signal
 
 
 
-%  General strategy:
+%  Summary of code sections:
 %
 %         Part A. initialize folder with stored meta data
 %         Part B. curves for fluctuating data
@@ -16,9 +22,9 @@
 %         Part E. plot quantifications
 
 
-%  last updated: jen, 2018 Oct 31
+%  last updated: jen, 2019 Jan 22
 
-%  commit: first commit, quanitification of gr responses to upshift
+%  commit: edit to streamline for upshifts
 %          
 
 % OK let's go!
@@ -35,24 +41,19 @@ load('storedMetaData.mat')
 
 
 % 0. define shift type, growth rate and time bin of interest
-prompt = 'Enter shift type as string (upshift / downshift): ';
-shiftType = input(prompt);
+shiftType = 'upshift';
 
 specificGrowthRate = 'log2';
 specificColumn = 3; % log2 growth rate
 xmin = -0.5;
 xmax = 3.5;
 
-
-prompt = 'Enter time per bin in seconds as double (i.e. 25): ';
-timePerBin = input(prompt);
+timePerBin = 75; % matches binning in shift response plots
 
 clear prompt
 
 
-
-
-%% Part B. accumulate up- or down-shift data
+%% Part B. accumulate upshift data
 
 
 % 1. create array of experiments of interest, then loop through each
@@ -80,7 +81,7 @@ for e = 1:length(exptArray)
     cd(experimentFolder)
     
     if strcmp(date,'2017-11-12') == 1
-        filename = 'lb-fluc-2017-11-12-width1p4-jiggle-0p5.mat';
+        filename = 'lb-fluc-2017-11-12-width1p4-jiggle-0p5.mat'; % says only 1.4 but it is both
     elseif ischar(timescale) == 0
         filename = strcat('lb-fluc-',date,'-c123-width1p4-c4-1p7-jiggle-0p5.mat');
     end
@@ -144,7 +145,6 @@ for e = 1:length(exptArray)
     
 
     
-    
     % 9. isolate corrected timestamp
     if strcmp(date, '2017-10-10') == 1
         correctedTime = conditionData_trim2(:,2);
@@ -169,13 +169,11 @@ for e = 1:length(exptArray)
     
     timeInPeriodFraction_inSeconds = timeInPeriodFraction * timescale;
     bins = ceil(timeInPeriodFraction_inSeconds/timePerBin);
-    bins_unique = unique(bins);
     clear timeInPeriods timeInPeriodFraction
     
     
     % 12. find which bins are boundaries signal phases
     lastBin_Q1 = (timescale/timePerBin)/4;                      % last bin before downshift
-    firstBin_downshift = (timescale/4)/timePerBin + 1;
     lastBin_downshift = (timescale*3/4)/timePerBin;             % last bin before upshift
     
     firstBin_upshift = (timescale*3/4)/timePerBin + 1;          % first bin of upshift
@@ -186,7 +184,6 @@ for e = 1:length(exptArray)
     
     % 13. list bins chronologically to combine broken up high nutrient phase
     %       i.e. start of upshift is Q4, concatenate Q1
-    downshiftBins{counter} = firstBin_downshift:lastBin_downshift;
     upshiftBins{counter} = [firstBin_upshift:lastBin_ofPeriod, 1:lastBin_Q1];
     clear timeInPeriodFraction timeInPeriodFraction_inSeconds
     
@@ -202,29 +199,7 @@ for e = 1:length(exptArray)
     else
         numPreshiftBins = 2;
     end
-    preShift_bins{counter} = numPreshiftBins;
     
-    
-    % for downshifts
-    % shorter timescales (less bins) require pulling from Q4 growth data
-    if lastBin_Q1 - numPreshiftBins <= 0
-        
-        % absolute value of (lastBin_Q1 - preShift_bins) = number of bins needed from Q4
-        % flipping list of bins from last to first lets us use absolute value as index
-        bins_unique_flipped = flipud(bins_unique);
-        first_pre_downshiftBin = bins_unique_flipped( abs(lastBin_Q1 - numPreshiftBins) );
-        
-        % array of pre-downshift bin numbers in chronological order
-        pre_downshiftBins{counter} = [first_pre_downshiftBin:lastBin_ofPeriod,1:lastBin_Q1];
-        
-        clear bins_unique_flipped
-        
-    else
-        
-        % if no need to tap into Q4 data...
-        pre_downshiftBins{counter} = lastBin_Q1 - (numPreshiftBins-1) : lastBin_Q1;
-        
-    end
     
     % for upshifts
     % bins are already chronological in number, so the job is easy!
@@ -252,54 +227,29 @@ for e = 1:length(exptArray)
     
     
     % plot!
-    if strcmp(shiftType,'upshift') == 1
-        
-        %concatenate pre and post upshift data
-        
-        % time
-        preUpshift_times = ((numPreshiftBins-1)*-1:0)*timePerBin_min;
-        postUpshift_times = (1:length( binned_mean{counter}( upshiftBins{counter} ) ) )*timePerBin_min;
-        upshift_times = [preUpshift_times,postUpshift_times];
-        
-        % growth rate
-        preUpshift_growth = binned_mean{counter}(pre_upshiftBins{counter});
-        postUpshift_growth = binned_mean{counter}(upshiftBins{counter});
-        upshift_growth = [preUpshift_growth;postUpshift_growth];
-        
-        
-        figure(1)   % binned upshift
-        plot(upshift_times,upshift_growth,'Color',color,'LineWidth',1,'Marker','.')
-        hold on
-        title(strcat('response to upshift, binned every (',num2str(timePerBin),') sec'))
-        
-        
-    else % downshift
-        
-        figure(3)  % binned downshift 
-        
-       
-        %concatenate pre and post downshift data
-        % time (same as upshift, just different variable names)
-        preDownshift_times = ((numPreshiftBins-1)*-1:0)*timePerBin_min;
-        postDownshift_times = (1:length( binned_mean{counter}( upshiftBins{counter} ) ) )*timePerBin_min;
-        downshift_times = [preDownshift_times,postDownshift_times];
-        
-        % growth rate
-        preDownshift_growth = binned_mean{counter}(pre_downshiftBins{counter});
-        postDownshift_growth = binned_mean{counter}(downshiftBins{counter});
-        downshift_growth = [preDownshift_growth;postDownshift_growth];
-        
-        plot(downshift_times,downshift_growth,'Color',color,'LineWidth',1,'Marker','.')
-        hold on
-        title(strcat('response to downshift, binned every (',num2str(timePerBin),') sec'))
-
-
-    end
+    %concatenate pre and post upshift data
+    
+    % time
+    preUpshift_times = ((numPreshiftBins-1)*-1:0)*timePerBin_min;
+    postUpshift_times = (1:length( binned_mean{counter}( upshiftBins{counter} ) ) )*timePerBin_min;
+    upshift_times = [preUpshift_times,postUpshift_times];
+    
+    % growth rate
+    preUpshift_growth = binned_mean{counter}(pre_upshiftBins{counter});
+    postUpshift_growth = binned_mean{counter}(upshiftBins{counter});
+    upshift_growth = [preUpshift_growth;postUpshift_growth];
+    
+    
+    figure(1)   % binned upshift
+    plot(upshift_times,upshift_growth,'Color',color,'LineWidth',1,'Marker','.')
+    hold on
+    title(strcat('response to upshift, binned every (',num2str(timePerBin),') sec'))
+    
     clear x y ycenter ybegin yend color
     clear conditionData_trim1 conditionData_trim2 growthRates_trim1 growthRates_trim2
     clear growthRt_noNaNs index lastBin_Q1 lastBin_ofPeriod lastBin_downshift firstBin_upshift firstBin_downshift
     clear first_pre_downshiftBin date condition e
-     
+    
 end
 
 xlabel('time (min)')
@@ -317,11 +267,8 @@ clear timePerBin_min
 
 
 % 1. create array of experiments of interest, then loop through each
-if strcmp(shiftType,'upshift');
-    exptArray = [21,22]; % use corresponding dataIndex values
-else
-    exptArray = [26,27];
-end
+exptArray = [21,22]; % dataIndex values of single upshift experiments
+
 
 %counter = 0;  % keep counter value from part B and continue
 for e_shift = 1:length(exptArray)
@@ -337,10 +284,6 @@ for e_shift = 1:length(exptArray)
         ignoredFrames = [112,113,114];
     elseif strcmp(date,'2018-08-01') == 1
         ignoredFrames = [94,95];
-    elseif strcmp(date,'2018-08-09') == 1
-        ignoredFrames = [115,116,117];
-    elseif strcmp(date,'2018-08-08') == 1
-        ignoredFrames = [112,113,114];
     end
     
     
@@ -462,12 +405,12 @@ for e_shift = 1:length(exptArray)
     % single shift experiments don't have high/low phase interruptions
     % however, they do have bins missing data!
     numPreshiftBins = 10;
-    preShift_bins{counter} = numPreshiftBins;
+
 
     % determine pre-shift bins
     index_single_shift = find(bins_unique == first_postshiftBin_single);
     pre_upshiftBins{counter} = bins_unique(index_single_shift-numPreshiftBins : index_single_shift-1); % same bins in both single down and upshifts
-    pre_downshiftBins{counter} = bins_unique(index_single_shift-numPreshiftBins : index_single_shift-1);
+    %pre_downshiftBins{counter} = bins_unique(index_single_shift-numPreshiftBins : index_single_shift-1);
     
 
     
@@ -486,7 +429,7 @@ for e_shift = 1:length(exptArray)
     color = rgb('DarkOliveGreen');
 
     
-    if strcmp(shiftType,'upshift') == 1
+%     if strcmp(shiftType,'upshift') == 1
         
         figure(1)   % binned upshift
 
@@ -514,30 +457,30 @@ for e_shift = 1:length(exptArray)
 
         
         
-    else
+%     else
+%         
+%         figure(3)    % downshift
+%         
+%         % plot!
+%         preDownshift_times = ((numPreshiftBins-1)*-1:0)*timePerBin_min;
+%         postDownshift_times = (1:length(binned_mean{counter}(postshiftBins_single{counter})))*timePerBin_min;
+%         downshift_times_gapped = [preDownshift_times, postDownshift_times];
+%         
+%         preDownshift_growth_gapped = binned_mean{counter}(pre_downshiftBins{counter});
+%         postDownshift_growth_single = binned_mean{counter}(postshiftBins_single{counter});
+%         downshift_growth_gapped = [preDownshift_growth_gapped; postDownshift_growth_single];
+%         
+%         % don't plot zeros that are place holders for gaps in data
+%         downshift_growth = downshift_growth_gapped(downshift_growth_gapped > 0);
+%         downshift_times = downshift_times_gapped(downshift_growth_gapped > 0);
+%         
+%         plot(downshift_times,downshift_growth,'Color',color,'LineWidth',1)
+%         grid on
+%         hold on
+%         title(strcat('response to downshift, binned every (',num2str(timePerBin),') sec'))
+%              
         
-        figure(3)    % downshift
-        
-        % plot!
-        preDownshift_times = ((numPreshiftBins-1)*-1:0)*timePerBin_min;
-        postDownshift_times = (1:length(binned_mean{counter}(postshiftBins_single{counter})))*timePerBin_min;
-        downshift_times_gapped = [preDownshift_times, postDownshift_times];
-        
-        preDownshift_growth_gapped = binned_mean{counter}(pre_downshiftBins{counter});
-        postDownshift_growth_single = binned_mean{counter}(postshiftBins_single{counter});
-        downshift_growth_gapped = [preDownshift_growth_gapped; postDownshift_growth_single];
-        
-        % don't plot zeros that are place holders for gaps in data
-        downshift_growth = downshift_growth_gapped(downshift_growth_gapped > 0);
-        downshift_times = downshift_times_gapped(downshift_growth_gapped > 0);
-        
-        plot(downshift_times,downshift_growth,'Color',color,'LineWidth',1)
-        grid on
-        hold on
-        title(strcat('response to downshift, binned every (',num2str(timePerBin),') sec'))
-             
-        
-    end
+%     end
 
      
 end
@@ -577,10 +520,11 @@ for currentClass = 1:length(cl)
         currentData = cell2mat( binned_mean(expClass==currentClass) );
         finalBin = length(currentData);
         
-        % order signal such that 1st half is upshift, 2nd half is downshift
+        % order signal such that 1st half is upshift (start to end of high phase),
+        %                        2nd half is downshift (start to end of low phase)
         binOrder = [4:finalBin, 1:3];
-        [~,binOrder_sorted] = sort(binOrder); % get the order of binOrder
-        orderedData = currentData(binOrder_sorted,:);
+        [~,binOrder_sorted] = sort(binOrder);           % get the order for sorting
+        orderedData = currentData(binOrder_sorted,:);   % sort data so that first high after low starts the array
         
         % generate generic timesignal
         genericTime = ((1:finalBin)*75)';
@@ -763,7 +707,9 @@ clear ans binOrder binOrder_sorted col counter slopes slopes_abs fullPeriod
 clear flats orderedTime orderedTime_trim orderedData cl currentClass idx
 clear shorty t section section_time numBins gr finalBin initialBin
 clear genericTime steadiedGR
-%% plot bar graphs of time to saturation and final saturation value
+
+
+%% Part E. plot bar graphs of time to saturation and final saturation value
 
 % time to saturation
 t_sat_mean = cellfun(@mean,steadinessTimescale)./60;
@@ -772,20 +718,23 @@ t_sat_std = cellfun(@std,steadinessTimescale)./60;
 sat_gr_mean = cellfun(@mean,steadinessValue);
 sat_gr_std = cellfun(@std,steadinessValue);
 
-figure(1)
+figure(2)
 hold on
 bar(t_sat_mean)
 errorbar(1:3,t_sat_mean,t_sat_std,'.')
 ylabel('time (min)')
 
-figure(2)
+t_sat_mean % display values
+t_sat_std
+
+figure(3)
 hold on
 bar(sat_gr_mean)
 errorbar(1:3,sat_gr_mean,sat_gr_std,'.')
 ylabel('growth rate (1/hr)')
 
-
-
+sat_gr_mean % display values
+sat_gr_std
 
 
 
