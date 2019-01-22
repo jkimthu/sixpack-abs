@@ -98,7 +98,7 @@ TABLE of CONTENTS:
 
 53. plot mean response of all replicates to shifts								
 54. quantify time to stabilization and stabilized gr value for upshifts			% 5B
-55. quantify time to stabilization and stabilized gr value for downshifts 		%
+55. quantify time to stabilization and stabilized gr value for downshifts 		% 5B
 
 70. growth rate vs time for individual xys from a given condition, one expt
 71. growth rate vs time for sensitivity analysis using 2018-02-01 				% supp
