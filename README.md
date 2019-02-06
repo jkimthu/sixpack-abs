@@ -1,6 +1,7 @@
 # sixpack-abs
 Feeling sore? Keep going. Correlations between the many many parameters of growth.
 
+last update: 2019 Feb 6th
 
 
 * * used in manuscript one * *
