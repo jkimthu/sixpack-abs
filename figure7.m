@@ -25,9 +25,9 @@
 %      15. repeat for all experiments 
 
 
-%  last updated: jen, 2018 December 9
+%  last updated: jen, 2019 Jan 20
 
-%  commit: plot new poly-lysine challenge, 2018-12-04
+%  commit: plot fluc to stable experiments: 29, 30, 31
 
 
 % OK let's go!
@@ -75,7 +75,7 @@ ymax = 0;
 
 %%
 % 1. create array of experiments of interest, then loop through each:
-exptArray = 19; % use corresponding dataIndex values
+exptArray = [29,30,31]; % use corresponding dataIndex values
 
 for e = 1:length(exptArray)
     
@@ -103,6 +103,8 @@ for e = 1:length(exptArray)
     elseif strcmp(date,'2018-12-04') == 1
         filename = 'lb-monod-2018-12-04-c12-width1p7-c34-width1p4-jiggle-0p5.mat';
     elseif strcmp(expType,'origFluc') == 1
+        filename = strcat('lb-fluc-',date,'-c123-width1p4-c4-1p7-jiggle-0p5.mat');
+    elseif strcmp(expType,'fluc2stable') == 1
         filename = strcat('lb-fluc-',date,'-c123-width1p4-c4-1p7-jiggle-0p5.mat');
     else
         filename = strcat('lb-fluc-',date,'-width1p7-jiggle-0p5.mat');
