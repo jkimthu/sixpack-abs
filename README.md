@@ -96,6 +96,16 @@ TABLE of CONTENTS:
 42. computing T-statistic, assuming noise from single cell variability 
 43. computing T-statistic, assuming noise from day-to-day variability
 
+50. volume vs time, selected individual tracks from all conditions			% 2A
+51. plot response to upshifts												% 5A
+		i. all replicates
+	   ii. mean of replicates
+	  iii. mean and standard deviation between replicate means
+
+52. plot response to downshifts 											% 5A
+		i. all replicates
+	   ii. mean of replicates
+	  iii. mean and standard deviation between replicate means
 
 53. plot mean response of all replicates to shifts								
 54. quantify time to stabilization and stabilized gr value for upshifts			% 5B
