@@ -16,7 +16,7 @@
 
 
 
-%  last updated: jen, 2018 Oct 28
+%  last updated: jen, 2018 Dec 28
 
 %  commit: downshift analysis, ignoring specific noisy frames
 
@@ -42,7 +42,7 @@ specificColumn = 3; % log2 growth rate
 xmin = -0.5;
 xmax = 3.5;
 
-prompt = 'Enter time per bin in seconds as double (i.e. 25): ';
+prompt = 'Enter time per bin in seconds as double (i.e. 75): ';
 timePerBin = input(prompt);
 
 clear prompt
@@ -305,21 +305,40 @@ for t = 1:2
         postUpshift_times = (1:length( binned_mean{t}( upshiftBins ) ))*timePerBin_min;
         upshift_times = [preUpshift_times,postUpshift_times];
         
-        % growth rate
+        % growth rate, mean
         preUpshift_growth = binned_mean{t}(pre_upshiftBins);
         postUpshift_growth = binned_mean{t}(upshiftBins);
         upshift_growth = [preUpshift_growth;postUpshift_growth];
         
-        
+
         figure(1)   % binned upshift
         plot(upshift_times,upshift_growth,'Color',color,'LineWidth',1)
         hold on
         title(strcat('response to upshift, binned every (',num2str(timePerBin),') sec'))
-        clear upshift_times upshift_growth
+        
+        
+        
+        % growth rate, populations
+        preUpshift_rates = binned_growthRate{t}(pre_upshiftBins);
+        postUpshift_rates = binned_growthRate{t}(upshiftBins);
+        upshift_rates = [preUpshift_rates; postUpshift_rates];
+        
+        
+        figure(2)
+        eachRow = cellfun(@length,upshift_rates);
+        numRows = max(eachRow);
+        upshift_rates_matrix = nan(numRows,length(upshift_rates));
+        for c = 1:length(upshift_rates)
+            upshift_rates_matrix(1:eachRow(c),c) = cell2mat(upshift_rates(c));
+        end
+        shadedErrorBar(upshift_times,upshift_rates_matrix,{@nanmean,@nanstd},'lineprops',{'Color',color})
+        hold on
+        
+        clear upshift_times upshift_growth upshift_rates_matrix
         
     else % downshift
         
-        figure(3)  % binned downshift
+        
         
         %concatenate pre and post downshift data
         % time (same as upshift, just different variable names)
@@ -332,10 +351,34 @@ for t = 1:2
         postDownshift_growth = binned_mean{t}(downshiftBins);
         downshift_growth = [preDownshift_growth;postDownshift_growth];
         
+
+        figure(3)  % binned downshift
         plot(downshift_times,downshift_growth,'Color',color,'LineWidth',1)
         hold on
         title(strcat('response to downshift, binned every (',num2str(timePerBin),') sec'))
-        clear downshift_times downshift_growth
+        
+        
+        % growth rate, populations
+        preDownshift_rates = binned_growthRate{t}(pre_downshiftBins);
+        postDownshift_rates = binned_growthRate{t}(downshiftBins);
+        downshift_rates = [preDownshift_rates; postDownshift_rates];
+        
+        
+        figure(4)
+        eachRow = cellfun(@length,downshift_rates);
+        numRows = max(eachRow);
+        downshift_rates_matrix = nan(numRows,length(downshift_rates));
+        for c = 1:length(downshift_rates)
+            downshift_rates_matrix(1:eachRow(c),c) = cell2mat(downshift_rates(c));
+        end
+        shadedErrorBar(downshift_times,downshift_rates_matrix,{@nanmean,@nanstd},'lineprops',{'Color',color})
+        hold on
+        
+        
+        clear downshift_times downshift_growth downshift_rates_matrix eachRow numRows
+        
+        
+        
         
     end
     clear preUpshift_growth postUpshift_growth preUpshift_times postUpshift_times
@@ -582,11 +625,41 @@ if strcmp(shiftType,'upshift') == 1
     upshift_growth = upshift_growth_gapped(upshift_growth_gapped > 0);
     upshift_times = upshift_times_gapped(upshift_growth_gapped > 0);
     
-    
     plot(upshift_times,upshift_growth,'Color',color,'LineWidth',1)
     hold on
     title(strcat('response to upshift, binned every (',num2str(timePerBin),') sec'))
     
+    
+    
+    figure(2)
+    preUpshift_rates = binned_growthRate{t}([pre_upshiftBins,11,12]);
+    postUpshift_rates_single = binned_growthRate{t}((index_single_shift+2: max(binCat)));
+    upshift_rates_gapped = [preUpshift_rates; postUpshift_rates_single];
+    
+    eachRow = cellfun(@length,upshift_rates_gapped);
+    numRows = max(eachRow);
+    upshift_rates_matrix = nan(numRows,length(upshift_rates_gapped));
+    for c = 1:length(upshift_rates_gapped)
+        upshift_rates = cell2mat(upshift_rates_gapped(c));
+        upshift_rates(upshift_rates <= 0) = NaN;
+        upshift_rates_matrix(1:length(upshift_rates),c) = upshift_rates;
+    end
+    shadedErrorBar(upshift_times,upshift_rates_matrix,{@nanmean,@nanstd},'lineprops',{'Color',color})
+    hold on
+    
+    
+    eachRow = cellfun(@length,downshift_rates_gapped);
+    numRows = max(eachRow);
+    downshift_rates_matrix = nan(numRows,length(downshift_rates_gapped));
+    for c = 1:length(downshift_rates_gapped)
+         downshift_rates = cell2mat(downshift_rates_gapped(c));
+         downshift_rates(downshift_rates <= 0) = NaN;
+         downshift_rates_matrix(1:length(downshift_rates),c) = downshift_rates;
+    end
+    shadedErrorBar(upshift_times,downshift_rates_matrix,{@nanmean,@nanstd},'lineprops',{'Color',color})
+    hold on
+    
+    clear upshift_times upshift_growth upshift_rates_matrix
     
 else
     
@@ -610,6 +683,22 @@ else
     hold on
     title(strcat('response to downshift, binned every (',num2str(timePerBin),') sec'))
     
+    
+    figure(4)
+    preDownshift_rates = binned_growthRate{t}(pre_downshiftBins);
+    postDownshift_rates_single = binned_growthRate{t}((index_single_shift: max(binCat)));
+    downshift_rates_gapped = [preDownshift_rates; postDownshift_rates_single];
+    
+    eachRow = cellfun(@length,downshift_rates_gapped);
+    numRows = max(eachRow);
+    downshift_rates_matrix = nan(numRows,length(downshift_rates_gapped));
+    for c = 1:length(downshift_rates_gapped)
+         downshift_rates = cell2mat(downshift_rates_gapped(c));
+         downshift_rates(downshift_rates <= 0) = NaN;
+         downshift_rates_matrix(1:length(downshift_rates),c) = downshift_rates;
+    end
+    shadedErrorBar(upshift_times,downshift_rates_matrix,{@nanmean,@nanstd},'lineprops',{'Color',color})
+    hold on
     
     
 end
@@ -644,128 +733,9 @@ y = [ybegin; ycenter; yend];
 plot([x y])
 %
 
-%%
-
-
-% plot average and standard dev of experimental means
-
-% define color scheme
-color300 = rgb('Chocolate');
-color900 = rgb('ForestGreen');
-color3600 = rgb('Amethyst');
-color_single = rgb('MidnightBlue');
-
-
-% brute force
-% isolate experiments based on type (as indicated in notes)
-binnedMean_300 = [binned_mean{1}, binned_mean{2}, binned_mean{3}];
-binnedMean_900 = [binned_mean{4}, binned_mean{5}, binned_mean{6}];
-binnedMean_3600 = [binned_mean{7}, binned_mean{8}, binned_mean{9}];
-
-binnedMean_shift = [binned_mean{10}, binned_mean{11}(1:length(binned_mean{10}))];
-binnedMean_shift(binnedMean_shift == 0) = NaN;
-
-
-% collect mean from each row
-m300 = mean(binnedMean_300,2)/log(2);
-m900 = mean(binnedMean_900,2)/log(2);
-m3600 = mean(binnedMean_3600,2)/log(2);
-m_shift = mean(binnedMean_shift,2)/log(2);
-
-% collect standard dev from each row
-sd300 = std(binnedMean_300,0,2)/log(2);
-sd900 = std(binnedMean_900,0,2)/log(2);
-sd3600 = std(binnedMean_3600,0,2)/log(2);
-sd_shift = std(binnedMean_shift,0,2)/log(2);
-
-
-%% upshift response, average between experimental replicates
-
-figure(3)
-
-% post single upshift
-tsingle = (-10:length(m_shift(single_shiftBins_unique{10})))*timePerBin_min;
-m_single = [m_shift(pre_upshiftBins{10}); m_shift(single_shiftBins_unique{10})];
-sd_single = [sd_shift(pre_upshiftBins{10}); sd_shift(single_shiftBins_unique{10})];
-errorbar(tsingle,m_single,sd_single,'Color',color_single,'LineWidth',1)
-hold on
-
-% 3600
-% concatenate pre-upshift and post shift
-t3600 = (-4:length(m3600(upshiftBins{9})))*timePerBin_min;
-m3600_2plot = [m3600(pre_upshiftBins{9}); m3600(upshiftBins{9})];
-sd3600_2plot = [sd3600(pre_upshiftBins{9}); sd3600(upshiftBins{9})];
-errorbar(t3600,m3600_2plot,sd3600_2plot,'Color',color3600,'LineWidth',1)
-hold on
-
-% 900
-% concatenate pre-upshift and post shift
-t900 = (-4:length(m900(upshiftBins{6})))*timePerBin_min;
-m900_2plot = [m900(pre_upshiftBins{6}); m900(upshiftBins{6})];
-sd900_2plot = [sd900(pre_upshiftBins{6}); sd900(upshiftBins{6})];
-errorbar(t900,m900_2plot,sd900_2plot,'Color',color900,'LineWidth',1)
-hold on
-
-% 300
-% concatenate pre-upshift and post shift
-t300 = (-2:length(m300(upshiftBins{3})))*timePerBin_min;
-m300_2plot = [m300(pre_upshiftBins{3}); m300(upshiftBins{3})];
-sd300_2plot = [sd300(pre_upshiftBins{3}); sd300(upshiftBins{3})];
-errorbar(t300,m300_2plot,sd300_2plot,'Color',color300,'LineWidth',1)
-
-hold on
-
-title(strcat('response to upshift, binned every (',num2str(timePerBin),') sec'))
-xlabel('time (sec)')
-ylabel(strcat('growth rate: (', specificGrowthRate ,'/ln(2))'))
-axis([numPreshiftBins*-1*timePerBin_min,60,0,4])
 
 
 
-
-%% downshift response, average between experimental replicates
- 
-figure(4)
-
-
-% post single upshift
-tsingle = (-10:length(m_shift(single_shiftBins_unique{10})))*timePerBin_min;
-m_single = [m_shift(pre_downshiftBins{10}); m_shift(single_shiftBins_unique{10})];
-sd_single = [sd_shift(pre_downshiftBins{10}); sd_shift(single_shiftBins_unique{10})];
-errorbar(tsingle,m_single,sd_single,'Color',color_single,'LineWidth',1)
-hold on
-
-
-
-% 3600
-% concatenate pre-upshift and post shift
-t3600 = (-4:length(m3600(downshiftBins{9})))*timePerBin_min;
-m3600_2plot = [m3600(pre_downshiftBins{9}); m3600(downshiftBins{9})];
-sd3600_2plot = [sd3600(pre_downshiftBins{9}); sd3600(downshiftBins{9})];
-errorbar(t3600,m3600_2plot,sd3600_2plot,'Color',color3600,'LineWidth',1)
-hold on
-
-
-% 900
-% concatenate pre-upshift and post shift
-t900 = (-4:length(m900(downshiftBins{6})))*timePerBin_min;
-m900_2plot = [m900(pre_downshiftBins{6}); m900(downshiftBins{6})];
-sd900_2plot = [sd900(pre_downshiftBins{6}); sd900(downshiftBins{6})];
-errorbar(t900,m900_2plot,sd900_2plot,'Color',color900,'LineWidth',1)
-hold on
-
-% 300
-% concatenate pre-upshift and post shift
-t300 = (-2:length(m300(downshiftBins{3})))*timePerBin_min;
-m300_2plot = [m300(pre_downshiftBins{3}); m300(downshiftBins{3})];
-sd300_2plot = [sd300(pre_downshiftBins{3}); sd300(downshiftBins{3})];
-errorbar(t300,m300_2plot,sd300_2plot,'Color',color300,'LineWidth',1)
-hold on
-
-title(strcat('response to downshift, binned every (',num2str(timePerBin),') sec'))
-xlabel('time (sec)')
-ylabel(strcat('growth rate: (', specificGrowthRate ,')'))
-axis([numPreshiftBins*-1*timePerBin_min,60,-1,3.5])
 
 
 
