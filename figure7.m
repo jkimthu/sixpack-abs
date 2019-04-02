@@ -25,9 +25,9 @@
 %      15. repeat for all experiments 
 
 
-%  last updated: jen, 2019 Jan 20
+%  last updated: jen, 2019 April 1
 
-%  commit: plot fluc to stable experiments: 29, 30, 31
+%  commit: plot figure 2B, 2018-01-29 with trimmed x axis
 
 
 % OK let's go!
@@ -43,39 +43,17 @@ load('storedMetaData.mat')
 dataIndex = find(~cellfun(@isempty,storedMetaData));
 
 
-% 0. define growth rates of interest, see comments below for details
-prompt = 'Enter specific growth rate definition as string (raw / norm / log2 / lognorm): ';
-specificGrowthRate = input(prompt);
+% 0. define growth rates and bin size (time) of interest
+specificGrowthRate = 'log2';
+specificColumn = 3;
 
-prompt = 'Enter specific binning in minutes as double: ';
-specificBinning = input(prompt);
+specificBinning = 2;
 binsPerHour = 60/specificBinning;
 
-clear prompt
-
-if strcmp(specificGrowthRate,'raw') == 1
-    specificColumn = 1;         % for selecting appropriate column in growthRates
-    xmin = -5;                  % lower limit for plotting x axis
-    xmax = 25;                  % upper limit for plotting x axis
-elseif strcmp(specificGrowthRate,'norm') == 1
-    specificColumn = 2;
-    xmin = -1;
-    xmax = 5;
-elseif strcmp(specificGrowthRate,'log2') == 1
-    specificColumn = 3;
-    xmin = -1;
-    xmax = 5;
-elseif strcmp(specificGrowthRate,'lognorm') == 1
-    specificColumn = 4;
-    xmin = -0.5;
-    xmax = 1;
-end
-
-ymax = 0;
 
 %%
 % 1. create array of experiments of interest, then loop through each:
-exptArray = [29,30,31]; % use corresponding dataIndex values
+exptArray = 13; % use corresponding dataIndex values
 
 for e = 1:length(exptArray)
     
@@ -85,7 +63,6 @@ for e = 1:length(exptArray)
     date = storedMetaData{index}.date;
     expType = storedMetaData{index}.experimentType;
     bubbletime = storedMetaData{index}.bubbletime;
-    
     timescale = storedMetaData{index}.timescale;
     disp(strcat(date, ': analyze!'))
     
@@ -141,16 +118,17 @@ for e = 1:length(exptArray)
         
         
         % 6. isolate volume (Va), timestamp, drop, curve, and trackNum data
-        volumes = conditionData(:,11);        % col 11 = calculated va_vals (cubic um)
-        timestamps_sec = conditionData(:,2);  % col 2  = timestamp in seconds
-        isDrop = conditionData(:,4);          % col 4  = isDrop, 1 marks a birth event
-        curveFinder = conditionData(:,5);     % col 5  = curve finder (ID of curve in condition)
-        trackNum = conditionData(:,20);       % col 20 = track number (not ID from particle tracking)
+        volumes = getGrowthParameter(conditionData,'volume');             % volume = calculated va_vals (cubic um)
+        timestamps_sec = getGrowthParameter(conditionData,'timestamp');   % ND2 file timestamp in seconds
+        isDrop = getGrowthParameter(conditionData,'isDrop');              % isDrop == 1 marks a birth event
+        curveFinder = getGrowthParameter(conditionData,'curveFinder');    % col 5  = curve finder (ID of curve in condition)
+        trackNum = getGrowthParameter(conditionData,'trackNum');          % track number, not ID from particle tracking
         
         
         
         % 7. calculate growth rate
         growthRates = calculateGrowthRate(volumes,timestamps_sec,isDrop,curveFinder,trackNum);
+        clear volumes isDrop curveFinder trackNum
         
         
 
@@ -169,10 +147,13 @@ for e = 1:length(exptArray)
         
         
         
+        
         % 9. isolate selected specific growth rate and timestamp
         growthRt = growthRates_bubbleTrimmed(:,specificColumn);
-        timeInHours = conditionData_bubbleTrimmed(:,2)/3600;   % col 2 = raw timestamps
-        clear isDrop trackNum volumes curveFinder conditionData
+        timestamps_sec = getGrowthParameter(conditionData_bubbleTrimmed,'timestamp'); % ND2 file timestamp in seconds
+        timeInHours = timestamps_sec./3600;
+        clear conditionData timestamps_sec
+        
         
         
         % 10. if appropriate, assign NaN to all growth rates associated with frames to ignore
@@ -230,10 +211,10 @@ for e = 1:length(exptArray)
         color = rgb(palette(condition));
         xmark = '.';
         
-        % adjust ymax in plot to longest bubble time
-        if ymax < maxTime
-            ymax = maxTime;
-        end
+%         % adjust ymax in plot to longest bubble time
+%         if ymax < maxTime
+%             ymax = maxTime;
+%         end
         
         figure(e)
         plot((1:length(bin_means))/binsPerHour,bin_means,'Color',color,'Marker',xmark)
@@ -241,22 +222,25 @@ for e = 1:length(exptArray)
         grid on
         legend('high,untreated','high,treated','low,untreated','low,treated')
         %axis([2,ymax+0.1,xmin,xmax])
-        axis([0,10,xmin,xmax])
+        axis([0,10,-0.5,3.5])
         xlabel('Time (hr)')
         ylabel('Growth rate')
         title(strcat(date,': (',specificGrowthRate,')'))
         
+        bin_counts(bin_counts == 0) = NaN;
+        min(bin_counts)
+        max(bin_counts)
         %end
     end
     
     
     % 14. save plots in active folder
-    cd('/Users/jen/Documents/StockerLab/Data_analysis/currentPlots/')
-    plotName = strcat('figure7-',specificGrowthRate,'-',date,'-',num2str(specificBinning),'minbins');
-    saveas(gcf,plotName,'epsc')
+    %cd('/Users/jen/Documents/StockerLab/Data_analysis/currentPlots/')
+    %plotName = strcat('figure7-',specificGrowthRate,'-',date,'-',num2str(specificBinning),'minbins');
+    %saveas(gcf,plotName,'epsc')
     
     %close(gcf)
-    clc
+    %clc
     
     % 15. repeat for all experiments
 end
