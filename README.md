@@ -12,7 +12,7 @@ last update: 2019 Feb 6th
 23. single period: growth rate vs nutrient phase							% 2C
 
 # figure 3
-20. monod: growth rate vs nutrient conc										% 3A
+21. monod: growth rate vs nutrient conc										% 3A
 26. pdf of growth rates normalized by pop average 							% 3B
 
 # figure 4
@@ -64,7 +64,7 @@ TABLE of CONTENTS:
 19. added volume vs time 							single
 
 
-21. monod: growth rate vs nutrient conc				population, full cycles only
+21. monod: growth rate vs nutrient conc				population
 22. growth rate: measured vs expected				population
 
 
@@ -110,6 +110,22 @@ TABLE of CONTENTS:
 53. plot mean response of all replicates to shifts								
 54. quantify time to stabilization and stabilized gr value for upshifts			% 5B
 55. quantify time to stabilization and stabilized gr value for downshifts 		% 5B
+
+56. quantify features of fluctuating growth rate
+	- time to stabilization
+	- mean stabilized growth rate (per period)
+	- mean growth rate in high & low nutrient (per period)
+	- amplitude of fluctuations
+
+	VERSION B. bins growth rates per hr instead of per period like in 56.m
+
+
+57. quantify number of unique tracks per condition per experiment
+	trackData.mat, has a cell per experiment with eight values
+	each row represents a condition: fluc, low, ave, high
+	each column represents total data (bubble trimmed) or post 3h data 
+
+
 
 70. growth rate vs time for individual xys from a given condition, one expt
 71. growth rate vs time for sensitivity analysis using 2018-02-01 				% supp
