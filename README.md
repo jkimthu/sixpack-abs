@@ -126,6 +126,10 @@ TABLE of CONTENTS:
 	each column represents total data (bubble trimmed) or post 3h data 
 
 
+58. relationship between G_low, G_ave, G_high and G_fluc
+	goal: determine strength of day-by-day correlations in growth rate
+	outcome: non-negligible positive correlations. normalize by daily Gs!
+
 
 70. growth rate vs time for individual xys from a given condition, one expt
 71. growth rate vs time for sensitivity analysis using 2018-02-01 				% supp
