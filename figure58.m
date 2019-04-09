@@ -6,15 +6,20 @@
 %                (2) steady-state Low vs steady-state Ave
 %                (3) steady-state Ave vs steady-state High
 %                (4) steady-state Ave vs fluc
+%                (5) steady-state Low vs fluc
+%                (6) steady-state High vs fluc
 
 %  Strategy:
 %
+%       0. initialize data
+%       1. compile data by condition
+%       2. fit linear regression and calculate correlation coefficient
+%       3. plot and save
 
 
-%  last updated: jen, 2019 April 8
+%  last updated: jen, 2019 April 9
 
-%  commit: first commit, correlation between conditions run on same day
-
+%  commit: first commit, add Gfluc vs Glow and Gfluc vs Ghigh comparisons
 
 % OK let's go!
 
@@ -30,7 +35,6 @@ load('growthRates_monod_curve.mat')
 
 % 0. initialize experiments to plot
 exptArray = [2:7,9:15];
-
 
 %% compile data
 
@@ -201,6 +205,70 @@ xlabel('growth rate in ave')
 ylabel('growth rate in fluc')
 title('correlation of Gave and Gfluc')
 
+%% plot data - steady-state Low vs G_fluc
+
+% 1. prep data
+rr = find(~isnan(low)); % rows to plot, avoiding NaN
+l = low(rr);
+f = fluc(rr);
+
+
+% 2. linear regression and correlation coefficient
+
+% fit linear regression
+p = polyfit(l,f,1); 
+x = l;
+y = p(1)*x + p(2);
+
+% calculate correlation coefficient
+r = corrcoef(l,f); 
+R = r(1,2);
+
+
+% 3. plot
+figure(5)
+plot(l,f,'o','MarkerSize',6)
+hold on
+plot(x,y,'Color',rgb('SlateGray'),'LineWidth',2)
+hold on
+txt = strcat('r=',num2str(R));
+text(x(end),y(end),txt,'FontSize',14)
+xlabel('growth rate in low')
+ylabel('growth rate in fluc')
+title('correlation of Glow and Gfluc')
+
+%% plot data - steady-state High vs G_fluc
+
+% 1. prep data
+rr = find(~isnan(high)); % rows to plot, avoiding NaN
+h = high(rr);
+f = fluc(rr);
+
+
+% 2. linear regression and correlation coefficient
+
+% fit linear regression
+p = polyfit(h,f,1); 
+x = h;
+y = p(1)*x + p(2);
+
+% calculate correlation coefficient
+r = corrcoef(h,f); 
+R = r(1,2);
+
+
+% 3. plot
+figure(6)
+plot(h,f,'o','MarkerSize',6)
+hold on
+plot(x,y,'Color',rgb('SlateGray'),'LineWidth',2)
+hold on
+txt = strcat('r=',num2str(R));
+text(x(end),y(end),txt,'FontSize',14)
+xlabel('growth rate in high')
+ylabel('growth rate in fluc')
+title('correlation of Ghigh and Gfluc')
+
 %% save plots
 
 % 1. save plots
@@ -222,6 +290,11 @@ figure(4)
 plotName = strcat('figure58-fig4-Gave_v_Gfluc');
 saveas(gcf,plotName,'epsc')
     
+figure(5)
+plotName = strcat('figure58-fig5-Glow_v_Gfluc');
+saveas(gcf,plotName,'epsc')
 
-
+figure(6)
+plotName = strcat('figure58-fig6-Ghigh_v_Gfluc');
+saveas(gcf,plotName,'epsc')
 
