@@ -13,9 +13,9 @@
 
 
 
-%  last updated: jen, 2019 April 8
+%  last updated: jen, 2019 April 12
 
-%  commit: first commit, first quantifications
+%  commit: plot all conditions as mean of replicates with shaded error (standard dev)
 
 
 % OK let's go!
@@ -201,7 +201,7 @@ end
 save('meanData_5MIN.mat','meanData')
 
 
-%% Part 2. plot mean mu over time
+%% Part 2. plot mean mu over time of individual replicates
 
 clear
 clc
@@ -279,5 +279,209 @@ title('mean growth rate binned every hour')
 axis(1,8,0.5,1.8)
 
 
+%% Part 3. plot mean and error of replicates, including steady low, ave and high
+
+clear
+clc
+
+% 0. initialize mean data
+cd('/Users/jen/Documents/StockerLab/Data_analysis/')
+load('meanData_B.mat')
+exptArray = [2:4,5:7,9:12,13:15];
+colorArray = [1,1,1,2,2,2,3,3,3,3,4,4,4,4];
+numReps = [3,3,4,3];
 
 
+% 0. initialize color designations
+palette_fluc = {'LightSkyBlue','SteelBlue','DeepSkyBlue','Navy'};
+palette_stable = {'Indigo','DarkGoldenRod','DarkRed'};
+
+
+counter = 0;
+for e = 1:length(exptArray)
+    
+    
+    counter = counter + 1;
+    timescale = colorArray(counter);
+    index = exptArray(e);
+    
+    if timescale == 3
+        maxTime = 4;
+    else
+        maxTime = 5;
+    end
+    
+    fluc = meanData{index}.fluc;
+    low = meanData{index}.low;
+    ave = meanData{index}.ave;
+    high = meanData{index}.high;
+    
+    if length(fluc) > maxTime
+        fluc = meanData{index}.fluc(1:maxTime);
+    elseif length(fluc) < maxTime
+        f2 = nan(maxTime,1);
+        f2(1:length(fluc),1) = fluc;
+        fluc = f2;
+    end
+    
+    if length(low) > 5
+        low = meanData{index}.low(1:5);
+    elseif length(low) < 5
+        l2 = nan(5,1);
+        l2(1:length(low),1) = low;
+        low = l2;
+    end
+    
+    if length(ave) > 5
+        ave = meanData{index}.ave(1:5);
+    elseif length(ave) < 5
+        a2 = nan(5,1);
+        a2(1:length(ave),1) = ave;
+        ave = a2;
+    end
+    
+    if length(high) > 5
+        high = meanData{index}.high(1:5);
+    elseif length(high) < 5
+        h2 = nan(5,1);
+        h2(1:length(high),1) = high;
+        high = h2;
+    end
+    clear l2 a2 h2
+    
+    % compile 2d matrix of mean replicate data, with rows as replicate and columns being time (period bin)
+    if timescale == 1
+        rep = e;
+        replicate_30_fluc(rep,:) = fluc;
+%         replicate_30_low(rep,:) = low;
+%         replicate_30_ave(rep,:) = ave;
+%         replicate_30_high(rep,:) = high;
+%         
+    elseif timescale == 2
+        rep = e-3;
+        rep_5_fluc(rep,:) = fluc;
+%         rep_5_low(rep,:) = low;
+%         rep_5_ave(rep,:) = ave;
+%         rep_5_high(rep,:) = high;
+%         
+    elseif timescale == 3
+        maxTime = 4; % maxTime for 15 min condition is 4 hrs due to data quality
+        rep = e-6;
+        rep_15_fluc(rep,:) = fluc;
+%         rep_15_low(rep,:) = low;
+%         rep_15_ave(rep,:) = ave;
+%         rep_15_high(rep,:) = high;
+        
+    elseif timescale == 4
+        rep = e-10;
+        rep_60_fluc(rep,:) = fluc;
+%         rep_60_low(rep,:) = low;
+%         rep_60_ave(rep,:) = ave;
+%         rep_60_high(rep,:) = high;
+        
+    end
+    
+    rep_low(e,:) = low;
+    rep_ave(e,:) = ave;
+    rep_high(e,:) = high;
+    
+    clear rep fluc high ave low
+    
+end
+
+
+% calculate mean and stdev across replicates (rows)
+r30_means = nanmean(replicate_30_fluc);
+r30_std = nanstd(replicate_30_fluc);
+
+r5_means = nanmean(rep_5_fluc);
+r5_std = nanstd(rep_5_fluc);
+
+r15_means = nanmean(rep_15_fluc);
+r15_std = nanstd(rep_15_fluc);
+
+r60_means = nanmean(rep_60_fluc);
+r60_std = nanstd(rep_60_fluc);
+
+
+% plot
+
+figure(1) % fluc
+ss = shadedErrorBar([1, 2, 3, 4, 5],replicate_30_fluc,{@nanmean,@nanstd},'lineprops',{'Color',rgb(palette_fluc(1))},'patchSaturation',0.3);
+ss.mainLine.LineWidth = 3;
+hold on
+ss = shadedErrorBar([1, 2, 3, 4, 5],rep_5_fluc,{@nanmean,@nanstd},'lineprops',{'Color',rgb(palette_fluc(2))},'patchSaturation',0.3);
+ss.mainLine.LineWidth = 3;
+hold on
+ss = shadedErrorBar([1, 2, 3, 4],rep_15_fluc,{@nanmean,@nanstd},'lineprops',{'Color',rgb(palette_fluc(3))},'patchSaturation',0.3);
+ss.mainLine.LineWidth = 3;
+hold on
+ss = shadedErrorBar([1, 2, 3, 4, 5],rep_60_fluc,{@nanmean,@nanstd},'lineprops',{'Color',rgb(palette_fluc(4))},'patchSaturation',0.3);
+ss.mainLine.LineWidth = 3;
+
+title('fluctuating: time-averaged growth rate binned every hour')
+ylabel('Growth rate (1/h)')
+xlabel('Time (h)')
+
+
+
+figure(2) % stable
+ss = shadedErrorBar([1, 2, 3, 4, 5],rep_low,{@nanmean,@nanstd},'lineprops',{'Color',rgb(palette_stable(1))},'patchSaturation',0.3);
+ss.mainLine.LineWidth = 3;
+hold on
+ss = shadedErrorBar([1, 2, 3, 4, 5],rep_ave,{@nanmean,@nanstd},'lineprops',{'Color',rgb(palette_stable(2))},'patchSaturation',0.3);
+ss.mainLine.LineWidth = 3;
+hold on
+ss = shadedErrorBar([1, 2, 3, 4, 5],rep_high,{@nanmean,@nanstd},'lineprops',{'Color',rgb(palette_stable(3))},'patchSaturation',0.3);
+ss.mainLine.LineWidth = 3;
+title('steady: time-averaged growth rate binned every hour')
+ylabel('Growth rate (1/h)')
+xlabel('Time (h)')
+
+
+
+figure(3) % all
+ss = shadedErrorBar([1, 2, 3, 4, 5],replicate_30_fluc,{@nanmean,@nanstd},'lineprops',{'Color',rgb(palette_fluc(1))},'patchSaturation',0.3);
+ss.mainLine.LineWidth = 3;
+hold on
+ss = shadedErrorBar([1, 2, 3, 4, 5],rep_5_fluc,{@nanmean,@nanstd},'lineprops',{'Color',rgb(palette_fluc(2))},'patchSaturation',0.3);
+ss.mainLine.LineWidth = 3;
+hold on
+ss = shadedErrorBar([1, 2, 3, 4],rep_15_fluc,{@nanmean,@nanstd},'lineprops',{'Color',rgb(palette_fluc(3))},'patchSaturation',0.3);
+ss.mainLine.LineWidth = 3;
+hold on
+ss = shadedErrorBar([1, 2, 3, 4, 5],rep_60_fluc,{@nanmean,@nanstd},'lineprops',{'Color',rgb(palette_fluc(4))},'patchSaturation',0.3);
+ss.mainLine.LineWidth = 3;
+hold on
+ss = shadedErrorBar([1, 2, 3, 4, 5],rep_low,{@nanmean,@nanstd},'lineprops',{'Color',rgb(palette_stable(1))},'patchSaturation',0.3);
+ss.mainLine.LineWidth = 3;
+hold on
+ss = shadedErrorBar([1, 2, 3, 4, 5],rep_ave,{@nanmean,@nanstd},'lineprops',{'Color',rgb(palette_stable(2))},'patchSaturation',0.3);
+ss.mainLine.LineWidth = 3;
+hold on
+ss = shadedErrorBar([1, 2, 3, 4, 5],rep_high,{@nanmean,@nanstd},'lineprops',{'Color',rgb(palette_stable(3))},'patchSaturation',0.3);
+ss.mainLine.LineWidth = 3;
+
+title('time-averaged growth rate binned every hour')
+ylabel('Growth rate (1/h)')
+xlabel('Time (h)')
+    
+axis([1,5,0.5,3])
+%%
+  
+
+
+
+
+
+
+
+
+% save only single shift data
+figure(3)
+plotName = strcat('figure51-upshift-',specificGrowthRate,'-mean&std-singleShiftOnly');
+%saveas(gcf,plotName,'epsc')
+
+
+% save mean signal (across replicates)
+save('response_singleUpshift.mat','upshift_means','upshift_times')
