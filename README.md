@@ -96,7 +96,8 @@ TABLE of CONTENTS:
 42. computing T-statistic, assuming noise from single cell variability 
 43. computing T-statistic, assuming noise from day-to-day variability
 
-47. width over time
+46. length and volume vs time
+47. width vs time
 48. width, length and volume by cell cycle fraction
 49. width vs time, selected individual tracks from all conditions
 50. volume vs time, selected individual tracks from all conditions			% 2A
