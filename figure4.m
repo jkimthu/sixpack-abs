@@ -15,7 +15,7 @@
 
 
 
-%  Last edit: jen, 2018 December 3
+%  Last edit: jen, 2019 April 30
 %  Commit: first commit, full and heatmap scatter plots for each condition
 
 
@@ -28,7 +28,7 @@ clc
 clear
 
 % 0. initialize complete meta data
-cd('/Users/jen/Documents/StockerLab/Data_analysis/')
+%cd('/Users/jen/Documents/StockerLab/Data_analysis/')
 load('storedMetaData.mat')
 
 max_vbirth = 10;
@@ -163,15 +163,31 @@ for e = 1:length(exptArray)
        
         clear birthSize_median birthSize_std divSize_median divSize_std
         clear div_bigOutlier div_smallOutlier birth_bigOutlier birth_smallOutlier
-            
+         
+        
+        
+        
+        % 14. calculate fit line and calculate correlation coeff
+        
+        %     i. fit linear regression
+        p = polyfit(V_birth_final,V_division_final,1);
+        x = V_birth_final;
+        y = p(1)*x + p(2);
+        
+        
+        %    ii. calculate correlation coefficient
+        r = corrcoef(V_birth_final,V_division_final);
+        R1(t) = r(1,2);
+        
+        
         
         % 14. plot
         color = rgb(palette(condition));
         
-        % for y=2x line
-        x = linspace(0,max_vbirth,10);
-        y = linspace(0,max_vdiv,10);
-        gray = rgb('Silver');
+%         % for y=2x line
+%         x = linspace(0,max_vbirth,10);
+%         y = linspace(0,max_vdiv,10);
+%         gray = rgb('Silver');
         
         
         % division size vs. birth size
@@ -179,7 +195,10 @@ for e = 1:length(exptArray)
         subplot(2,2,condition)
         plot(V_birth_final,V_division_final,'o','Color',color)
         hold on
-        plot(x,y,'Color',gray)
+        plot(x,y,'Color',rgb('SlateGray'),'LineWidth',2)
+        hold on
+        txt = strcat('r=',num2str(r(1,2)));
+        text(x(end),y(end),txt,'FontSize',14)
         legend(environment(condition))
         title(date)
         xlabel('birth size (cubic um)')
@@ -220,6 +239,10 @@ for e = 1:length(exptArray)
         % colorMap = [linspace(0,color(1),max(counts))', linspace(0,color(2),max(counts))', linspace(0,color(3),max(counts))'];
         % colormap(colorMap);
         colorbar;
+        plot(x,y,'Color',rgb('SlateGray'),'LineWidth',2)
+        hold on
+        txt = strcat('r=',num2str(r(1,2)));
+        text(x(end),y(end),txt,'FontSize',14)
         axis([0 max_vbirth 0 max_vdiv])
         hold on
         plot(x,y,'Color',gray)
@@ -234,7 +257,7 @@ for e = 1:length(exptArray)
     end
     
     % 16. save plots in active folder
-    cd('/Users/jen/Documents/StockerLab/Data_analysis/currentPlots/')
+    %cd('/Users/jen/Documents/StockerLab/Data_analysis/currentPlots/')
     figure(4)
     plotName = strcat('figure4-div-v-birth-',date,'-noBinning');
     saveas(gcf,plotName,'epsc')
