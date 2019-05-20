@@ -15,8 +15,8 @@
 
 
 
-%  Last edit: jen, 2019 April 30
-%  Commit: first commit, full and heatmap scatter plots for each condition
+%  Last edit: jen, 2019 May 3
+%  Commit: edit to calculate correlation coeffs for each condition scatter plot
 
 
 
@@ -36,7 +36,7 @@ max_vdiv = 20;
 
 %%
 % 1. for all experiments in dataset
-exptArray = [2,3,4];
+exptArray = [2:4,5:7,9:12,13:15];
 
 for e = 1:length(exptArray)
     
@@ -49,13 +49,9 @@ for e = 1:length(exptArray)
     
     
     % 2. load measured data
-    experimentFolder = strcat('/Users/jen/Documents/StockerLab/Data/LB/',date);
-    cd(experimentFolder)
-    if strcmp(date,'2017-11-12') == 1
-        filename = strcat('lb-fluc-',date,'-width1p4-jiggle-0p5.mat');
-    else
-        filename = strcat('lb-fluc-',date,'-c123-width1p4-c4-1p7-jiggle-0p5.mat');
-    end
+    %experimentFolder = strcat('/Users/jen/Documents/StockerLab/Data/LB/',date);
+    %cd(experimentFolder)
+    filename = strcat('lb-fluc-',date,'-c123-width1p4-c4-1p7-jiggle-0p5.mat');
     load(filename,'D5','T');
     
     
@@ -63,7 +59,7 @@ for e = 1:length(exptArray)
     xy_start = min(min(storedMetaData{index}.xys));
     xy_end = max(max(storedMetaData{index}.xys));
     exptData = buildDM(D5, T, xy_start, xy_end,index,expType);
-    clear D5 T xy_start xy_end e
+    clear D5 T xy_start xy_end
     
     
     % 4. initialize colors for plotting
@@ -177,97 +173,99 @@ for e = 1:length(exptArray)
         
         %    ii. calculate correlation coefficient
         r = corrcoef(V_birth_final,V_division_final);
-        R1(t) = r(1,2);
+        
+        R1(e,condition) = r(1,2);
         
         
         
-        % 14. plot
-        color = rgb(palette(condition));
-        
-%         % for y=2x line
-%         x = linspace(0,max_vbirth,10);
-%         y = linspace(0,max_vdiv,10);
-%         gray = rgb('Silver');
-        
-        
-        % division size vs. birth size
-        figure(4)
-        subplot(2,2,condition)
-        plot(V_birth_final,V_division_final,'o','Color',color)
-        hold on
-        plot(x,y,'Color',rgb('SlateGray'),'LineWidth',2)
-        hold on
-        txt = strcat('r=',num2str(r(1,2)));
-        text(x(end),y(end),txt,'FontSize',14)
-        legend(environment(condition))
-        title(date)
-        xlabel('birth size (cubic um)')
-        ylabel('division size (cubic um)')
-        axis([0 max_vbirth 0 max_vdiv])
-        
-        
-        % 15. plot with colorbar indicating density
-        binsPerMicron = 2;
-        binSize = 1/binsPerMicron; % microns
-        
-        bin_birth = ceil(V_birth_final/binSize);
-        bin_div = ceil(V_division_final/binSize);
-        
-        bin_mat = zeros(max_vdiv/binSize,max_vbirth/binSize);
-        
-        test = sub2ind(size(bin_mat),bin_div,bin_birth);
-        
-        a = unique(test);
-        out = [a,histc(test(:),a)];
-        
-        idx = out(:,1);
-        counts = out(:,2);
-        
-        
-        bin_mat(out(:,1)) = out(:,2);
-        [i,j] = ind2sub([40,20],idx);
-        
-        binned_vBirths = j.*binSize;
-        binned_vDivs = i.*binSize;
-        
-        
-     
-        figure(5)
-        subplot(2,2,condition)
-        scatter(binned_vBirths,binned_vDivs,60,counts,'filled')
-        colormap(parula) % see colormap documentation
-        % colorMap = [linspace(0,color(1),max(counts))', linspace(0,color(2),max(counts))', linspace(0,color(3),max(counts))'];
-        % colormap(colorMap);
-        colorbar;
-        plot(x,y,'Color',rgb('SlateGray'),'LineWidth',2)
-        hold on
-        txt = strcat('r=',num2str(r(1,2)));
-        text(x(end),y(end),txt,'FontSize',14)
-        axis([0 max_vbirth 0 max_vdiv])
-        hold on
-        plot(x,y,'Color',gray)
-        title(condition)
-        xlabel('birth size (cubic um)')
-        ylabel('division size (cubic um)')
-
-        
+%         % 14. plot
+%         color = rgb(palette(condition));
+%         
+% %         % for y=2x line
+% %         x = linspace(0,max_vbirth,10);
+% %         y = linspace(0,max_vdiv,10);
+% %         gray = rgb('Silver');
+%         
+%         
+%         % division size vs. birth size
+%         figure(4)
+%         subplot(2,2,condition)
+%         plot(V_birth_final,V_division_final,'o','Color',color)
+%         hold on
+%         plot(x,y,'Color',rgb('SlateGray'),'LineWidth',2)
+%         hold on
+%         txt = strcat('r=',num2str(r(1,2)));
+%         text(x(end),y(end),txt,'FontSize',14)
+%         legend(environment(condition))
+%         title(date)
+%         xlabel('birth size (cubic um)')
+%         ylabel('division size (cubic um)')
+%         axis([0 max_vbirth 0 max_vdiv])
+%         
+%         
+%         % 15. plot with colorbar indicating density
+%         binsPerMicron = 2;
+%         binSize = 1/binsPerMicron; % microns
+%         
+%         bin_birth = ceil(V_birth_final/binSize);
+%         bin_div = ceil(V_division_final/binSize);
+%         
+%         bin_mat = zeros(max_vdiv/binSize,max_vbirth/binSize);
+%         
+%         test = sub2ind(size(bin_mat),bin_div,bin_birth);
+%         
+%         a = unique(test);
+%         out = [a,histc(test(:),a)];
+%         
+%         idx = out(:,1);
+%         counts = out(:,2);
+%         
+%         
+%         bin_mat(out(:,1)) = out(:,2);
+%         [i,j] = ind2sub([40,20],idx);
+%         
+%         binned_vBirths = j.*binSize;
+%         binned_vDivs = i.*binSize;
+%         
+%         
+%      
+%         figure(5)
+%         subplot(2,2,condition)
+%         scatter(binned_vBirths,binned_vDivs,60,counts,'filled')
+%         colormap(parula) % see colormap documentation
+%         % colorMap = [linspace(0,color(1),max(counts))', linspace(0,color(2),max(counts))', linspace(0,color(3),max(counts))'];
+%         % colormap(colorMap);
+%         colorbar;
+%         plot(x,y,'Color',rgb('SlateGray'),'LineWidth',2)
+%         hold on
+%         txt = strcat('r=',num2str(r(1,2)));
+%         text(x(end),y(end),txt,'FontSize',14)
+%         axis([0 max_vbirth 0 max_vdiv])
+% %         hold on
+% %         plot(x,y,'Color',gray)
+%         title(condition)
+%         xlabel('birth size (cubic um)')
+%         ylabel('division size (cubic um)')
+% 
+%         
 
 
         
     end
-    
-    % 16. save plots in active folder
-    %cd('/Users/jen/Documents/StockerLab/Data_analysis/currentPlots/')
-    figure(4)
-    plotName = strcat('figure4-div-v-birth-',date,'-noBinning');
-    saveas(gcf,plotName,'epsc')
-    close(gcf)
-    
-    figure(5)
-    plotName = strcat('figure4-div-v-birth-',date,'-',num2str(binsPerMicron),'binsPerMicron');
-    saveas(gcf,plotName,'epsc')
-    close(gcf)
-    clc
+%     
+%     % 16. save plots in active folder
+%     %cd('/Users/jen/Documents/StockerLab/Data_analysis/currentPlots/')
+%     figure(4)
+%     plotName = strcat('figure4-div-v-birth-',date,'-noBinning');
+%     saveas(gcf,plotName,'epsc')
+%     close(gcf)
+%     
+%     figure(5)
+%     plotName = strcat('figure5-div-v-birth-',date,'-',num2str(binsPerMicron),'binsPerMicron');
+%     saveas(gcf,plotName,'epsc')
+%     close(gcf)
+%     clc
     
 end
 
+save('div-v-birth-corrCoefs','R1')
