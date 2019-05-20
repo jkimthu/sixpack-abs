@@ -8,7 +8,7 @@ last update: 2019 Feb 6th
 
 # figure 2
 50. volume vs time, selected individual tracks from all conditions			% 2A
-7.  growth rate vs time 													% 2B, supp
+7.  growth rate vs ti													% 2B, supp
 23. single period: growth rate vs nutrient phase							% 2C
 
 # figure 3
@@ -66,7 +66,7 @@ TABLE of CONTENTS:
 
 21. monod: growth rate vs nutrient conc				population
 22. growth rate: measured vs expected				population
-
+23. single period: growth rate vs nutrient phase							% 2C
 
 
 24. violin plots with dV/dt calculation performed BEFORE 3hr trim
@@ -75,7 +75,9 @@ TABLE of CONTENTS:
 26. pdf of growth rates normalized by pop ave
 
 27. timescale specific responses in growth rate to upshifts & downshifts
+
 28. added volume vs birth volume, Taheri	
+
 29. violin plots to compare distributions between fluc and stable
 30. fraction negative growth rates vs time, shifts 
 31. added size vs birth size (normalized by average birth size), trimmed x axis
@@ -138,4 +140,4 @@ TABLE of CONTENTS:
 
 70. growth rate vs time for individual xys from a given condition, one expt
 71. growth rate vs time for sensitivity analysis using 2018-02-01 				% supp
-
+72. overlaid periods by increasing time - looking for adaptation
