@@ -140,4 +140,4 @@ TABLE of CONTENTS:
 
 70. growth rate vs time for individual xys from a given condition, one expt
 71. growth rate vs time for sensitivity analysis using 2018-02-01 				% supp
-72. overlaid periods by increasing time - looking for adaptation
+72. overlaid periods by increasing time - looking for adaptation				% 6C

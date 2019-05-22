@@ -56,7 +56,8 @@ experimentCount = length(dataIndex);
 %% (B) plot volume over time, overlaying nutrient signal
 
 % 1. for all experiments in dataset
-exptArray = 15;
+exptArray = 15; % 2018-02-01
+
 for e = 1:length(exptArray)
     
     % 2. collect experiment date
@@ -75,34 +76,68 @@ for e = 1:length(exptArray)
     experimentFolder = strcat('/Users/jen/Documents/StockerLab/Data/LB/',date);
     cd(experimentFolder)
     filename = strcat('lb-fluc-',date,'-width1p7-jiggle-0p5.mat');
-    load(filename,'D','D5','T');
+    load(filename,'D5','T');
     xy_start = min(min(xys));
     xy_end = max(max(xys));
     exptData = buildDM(D5, T, xy_start, xy_end,index,expType);
+    clear xy_start xy_end xys
 %%
     
     % 5. for each condition, specify:
     for condition = 1:4 % 1 = fluctuating; 3 = ave nutrient condition
         
         % 6. gather specified condition data
-        conditionData = exptData(exptData(:,21) == condition,:);
+        condVals = getGrowthParameter(exptData,'condition');
+        conditionData = exptData(condVals == condition,:);
         
         
-        % 7. find all tracks that are at least x hours long
-        x = 7;
-        trackNum = conditionData(:,20);     % col 20 = track num per condition (not xy based ID from tracking)
+        % 7. isolate all unique cell cycles
+        fullCurves = getGrowthParameter(conditionData,'curveFinder');
+        fullData = conditionData(fullCurves > 0,:);
+        clear fullCurves conditionData
         
-        uniqueTracks = unique(trackNum);
-        framesPerTrack = histc(trackNum(:), uniqueTracks);
-        framesPerHour = 3600/(60+57);
-        longTracks = uniqueTracks(framesPerTrack(:) >= framesPerHour * x);
-        clear xy_start xy_end xys trackNum
+        
+        % 8. trim data to after 3h
+        minTime = 3;
+        timestamp_sec = getGrowthParameter(fullData,'timestamp');
+        timestamp_hr = timestamp_sec./3600;
+        tempData = fullData(timestamp_hr > minTime,:);
+        clear minTime timestamp_sec timestamp_hr fullData
+        
+        
+        % 9. trim data set to before any bubbles
+        maxTime = bubbletime(condition);
+        timestamp_sec = getGrowthParameter(tempData,'timestamp');
+        timestamp_hr = timestamp_sec./3600;
+        stableData = tempData(timestamp_hr < maxTime,:);
+        clear tempData timestamp_sec timestamp_hr minTime
+        
+        
+        % 10. identify unique curves
+        curveFinder = getGrowthParameter(stableData,'curveFinder');
+        uniqueCurves = unique(curveFinder);
+        
+        
+        % 11. id curves that are at least 8 frames long
+        volumes = getGrowthParameter(stableData,'volume');
+        for cc = 1:length(uniqueCurves)
+            
+            currentVolume = volume(curveFinder == uniqueCurves(cc));
+            
+            % if 8+, store ID and linearize and calculate slope
+            
+            
+            % if <8, skip
+            
+            
+        end
+        
         
         
         % 8. plot track volume vs time, overlay with nutrient signal
         %    note: if number of long tracks exceeds 10, choose 5 at random to plot
         numLongTracks = length(longTracks);
-        max_numTracks = 5;
+        max_numTracks = 10;
         
         if numLongTracks > max_numTracks
             
