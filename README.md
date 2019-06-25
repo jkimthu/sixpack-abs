@@ -137,7 +137,12 @@ TABLE of CONTENTS:
 	goal: determine strength of day-by-day correlations in growth rate
 	outcome: non-negligible positive correlations. normalize by daily Gs!
 
+	Supplementary Figure 7. in manuscript one (growth rate)
+
 
 70. growth rate vs time for individual xys from a given condition, one expt
 71. growth rate vs time for sensitivity analysis using 2018-02-01 				% supp
 72. overlaid periods by increasing time - looking for adaptation				% 6C
+
+73. Size distributions at single timepoints
+    Of interest for Vicente
