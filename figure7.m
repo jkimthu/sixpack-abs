@@ -25,9 +25,9 @@
 %      15. repeat for all experiments 
 
 
-%  last updated: jen, 2019 April 1
+%  last updated: jen, 2019 June 27
 
-%  commit: plot figure 2B, 2018-01-29 with trimmed x axis
+%  commit: first growth rate over time for 2019-06-25 experiment
 
 
 % OK let's go!
@@ -47,13 +47,13 @@ dataIndex = find(~cellfun(@isempty,storedMetaData));
 specificGrowthRate = 'log2';
 specificColumn = 3;
 
-specificBinning = 2;
+specificBinning = 30;
 binsPerHour = 60/specificBinning;
 
 
 %%
 % 1. create array of experiments of interest, then loop through each:
-exptArray = 13; % use corresponding dataIndex values
+exptArray = 37; % use corresponding dataIndex values
 
 for e = 1:length(exptArray)
     
@@ -80,6 +80,8 @@ for e = 1:length(exptArray)
     elseif strcmp(date,'2018-12-04') == 1
         filename = 'lb-monod-2018-12-04-c12-width1p7-c34-width1p4-jiggle-0p5.mat';
     elseif strcmp(expType,'origFluc') == 1
+        filename = strcat('lb-fluc-',date,'-c123-width1p4-c4-1p7-jiggle-0p5.mat');
+    elseif strcmp(expType,'steady2fluc') == 1
         filename = strcat('lb-fluc-',date,'-c123-width1p4-c4-1p7-jiggle-0p5.mat');
     elseif strcmp(expType,'fluc2stable') == 1
         filename = strcat('lb-fluc-',date,'-c123-width1p4-c4-1p7-jiggle-0p5.mat');
@@ -110,9 +112,13 @@ for e = 1:length(exptArray)
     % 5. build data matrix from specified condition
     for condition = 1:length(bubbletime)
         
-        
-        xy_start = storedMetaData{index}.xys(condition,1);
-        xy_end = storedMetaData{index}.xys(condition,end);
+        if strcmp(expType,'steady2fluc') == 1
+            xy_start = storedMetaData{index}.xys{condition}(1);
+            xy_end = storedMetaData{index}.xys{condition}(end);
+        else
+            xy_start = storedMetaData{index}.xys(condition,1);
+            xy_end = storedMetaData{index}.xys(condition,end);
+        end
         conditionData = buildDM(D5, T, xy_start, xy_end,index,expType);
         
         
