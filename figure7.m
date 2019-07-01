@@ -25,9 +25,9 @@
 %      15. repeat for all experiments 
 
 
-%  last updated: jen, 2019 June 27
+%  last updated: jen, 2019 July 1
 
-%  commit: first growth rate over time for 2019-06-25 experiment
+%  commit: first growth rate over time for 2019-06-26 experiment
 
 
 % OK let's go!
@@ -47,13 +47,13 @@ dataIndex = find(~cellfun(@isempty,storedMetaData));
 specificGrowthRate = 'log2';
 specificColumn = 3;
 
-specificBinning = 30;
+specificBinning = 2;
 binsPerHour = 60/specificBinning;
 
 
 %%
 % 1. create array of experiments of interest, then loop through each:
-exptArray = 37; % use corresponding dataIndex values
+exptArray = 38; % use corresponding dataIndex values
 
 for e = 1:length(exptArray)
     
