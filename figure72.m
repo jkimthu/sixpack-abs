@@ -33,7 +33,7 @@
 
 
 %  Last edit: jen, 2019 July 3
-%  commit: stabilization of growth response from steady to fluc experiments
+%  commit: add compiled plot of replicate experiments
 
 % Okie, go go let's go!
 
@@ -59,8 +59,8 @@ exptArray = [37,38]; % list experiments by index
 
 % 0. initialize colors per successive period
 %colorSpectrum = {'Indigo','MediumSlateBlue','DodgerBlue','DeepSkyBlue','Teal','DarkGreen','MediumSeaGreen','GoldenRod','DarkOrange','Red'};
-colorSpectrum = {'Indigo','DodgerBlue','DeepSkyBlue','Teal','MediumSeaGreen','GoldenRod','Red'};
-shape = '.';
+colorSpectrum = {'Indigo','DodgerBlue','DeepSkyBlue','Teal','MediumSeaGreen','GoldenRod','Gold'};
+
 
 
 %% B. loop through each period and isolate growth rates
@@ -216,6 +216,59 @@ for e = 1:length(exptArray)
     
 % 14. repeat for all experiments
 end
-
+clear binVector bubbletime color condition conditionData
+clear growthRt_binned growthRt isEnd period_current period_first period_mus pp
+clear shape shiftTime specificColumn date e filename exptCounter exptArray
 
 %% C. compile replicate data with errorbars
+
+% for each period
+time = -1:30;
+for period = 1:7
+    
+    
+    % 1. isolate current period signal from both replicate
+    rep1 = signals_all{1}{period};
+    rep2 = signals_all{2}{period};
+    
+    
+    % 2. ensure replicate data are of same length, trim if needed
+    %    compile replicate data with columns being time and rows being replicate (period bin)
+    if length(rep1) ~= length(rep2)
+        rl = [length(rep1); length(rep2)];
+        rep_compiled(1,:) = rep1(1:min(rl));
+        rep_compiled(2,:) = rep2(1:min(rl));
+    else
+        rep_compiled(1,:) = rep1;
+        rep_compiled(2,:) = rep2;
+    end
+    
+    
+    % 3. calculate mean and stdev across replicates (rows)
+    rep_mean = mean(rep_compiled);
+    rep_std = std(rep_compiled);
+    
+    
+    % 4. plot
+    color = rgb(colorSpectrum{period});
+    
+    figure(1) % mean of replicate means
+    hold on
+    plot(time(1:length(rep_mean)),rep_mean,'Color',color,'LineWidth',1,'Marker','.')
+    ylabel('growth rate: log2 (1/hr)')
+    xlabel('time (min)')
+    
+    figure(1) % mean and std of replicate means
+    hold on
+    ss = shadedErrorBar(time(1:length(rep_mean)),rep_compiled,{@nanmean,@nanstd},'lineprops',{'Color',color},'patchSaturation',0.3);
+
+    % set face and edge properties
+    ss.mainLine.LineWidth = 3;
+    ss.patch.FaceColor = color;
+    xlim([-2 31])
+    
+    clear rep_compiled
+end
+
+
+
