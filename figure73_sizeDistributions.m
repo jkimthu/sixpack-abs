@@ -24,8 +24,7 @@
 
 %  Last edit: jen, 2019 July 25
 
-%  commit: first commit, volume distributions at various timepoints across
-%          experiment
+%  commit: edit xy identification to work with steady2fluc data
 
 
 
@@ -43,7 +42,7 @@ experimentCount = length(dataIndex);
 %% (B) plot volume over time, overlaying nutrient signal
 
 % 1. for all experiments in dataset
-exptArray = 15; % 2019-02-01
+exptArray = 37; % 2019-02-01
 
 for e = 1:length(exptArray)
     
@@ -62,17 +61,23 @@ for e = 1:length(exptArray)
     cd(experimentFolder)
     filename = strcat('lb-fluc-',date,'-c123-width1p4-c4-1p7-jiggle-0p5.mat');
     load(filename,'D5','T');
-    xy_start = min(min(xys));
-    xy_end = max(max(xys));
-    exptData = buildDM(D5, T, xy_start, xy_end,index,expType);
 
     
     % 4. for each condition, specify:
-    for condition = 1:4 % 1 = fluctuating; 3 = ave nutrient condition
+    for condition = 1:2 % 1 = fluctuating; 3 = ave nutrient condition
         
-       
+        if strcmp(expType,'steady2fluc') == 1
+            xy_start = storedMetaData{index}.xys{condition}(1);
+            xy_end = storedMetaData{index}.xys{condition}(end);
+        else
+            xy_start = storedMetaData{index}.xys(condition,1);
+            xy_end = storedMetaData{index}.xys(condition,end);
+        end
+        
+        
         % 5. gather specified condition data
-        conditionData = exptData(exptData(:,21) == condition,:);
+        conditionData = buildDM(D5, T, xy_start, xy_end,index,expType);
+        %conditionData = exptData(exptData(:,21) == condition,:);
         
         
         % 6. isolate timestamp and truncate data to non-erroneous (e.g. bubbles) timestamps
