@@ -26,9 +26,9 @@
 %      15. repeat for all experiments 
 
 
-%  last updated: jen, 2019 July 1
+%  last updated: jen, 2019 Aug 2
 
-%  commit: first growth rate over time for 2019-06-26 experiment
+%  commit: first growth rate over time for 2019-07-18 experiment
 
 
 % OK let's go!
@@ -54,7 +54,7 @@ binsPerHour = 60/specificBinning;
 
 %%
 % 1. create array of experiments of interest, then loop through each:
-exptArray = 38; % use corresponding dataIndex values
+exptArray = 39; % use corresponding dataIndex values
 
 for e = 1:length(exptArray)
     
@@ -229,7 +229,7 @@ for e = 1:length(exptArray)
         grid on
         legend('high,untreated','high,treated','low,untreated','low,treated')
         %axis([2,ymax+0.1,xmin,xmax])
-        axis([0,10,-0.5,3.5])
+        axis([0,11.2,-0.5,3.5])
         xlabel('Time (hr)')
         ylabel('Growth rate')
         title(strcat(date,': (',specificGrowthRate,')'))
