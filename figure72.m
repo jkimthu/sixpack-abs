@@ -32,8 +32,8 @@
 
 
 
-%  Last edit: jen, 2019 July 3
-%  commit: add compiled plot of replicate experiments
+%  Last edit: jen, 2019 August 2
+%  commit: edit to include replicate #3, 2019-07-18 data
 
 % Okie, go go let's go!
 
@@ -42,7 +42,6 @@ clc
 clear
 
 % 0. initialize analysis parameters
-condition = 1; % 1 = fluctuating; 3 = ave nutrient condition
 binsPerPeriod = 30;
 
 
@@ -54,7 +53,7 @@ specificColumn = 3;
 % 0. initialize complete meta data
 cd('/Users/jen/Documents/StockerLab/Data_analysis/')
 load('storedMetaData.mat')
-exptArray = [37,38]; % list experiments by index
+exptArray = [37,38,39]; % list experiments by index
 
 
 % 0. initialize colors per successive period
@@ -145,10 +144,19 @@ for e = 1:length(exptArray)
     
     % 8. generate a bin vector for entire time series
     %    assigning growth rate to time value of the middle of two timepoints (not end value)!
+    
+    % note: replicate three is not at an even timestamp
+    % solution: adjust shiftTime and timestamps to help bin correctly
+
+    if strcmp(date,'2019-07-18') == 1
+        timestamps_trimmed = timestamps_trimmed + 5*60; % 5 min off of round 3.5 shift time * 60 sec
+        shiftTime = shiftTime + 5*60;
+    end
     timestep_sec = 60+57;
     timeInSeconds_middle = timestamps_trimmed - (timestep_sec/2);
     timeInPeriods = timeInSeconds_middle/timescale;
     binVector = ceil(timeInPeriods*binsPerPeriod);
+
     clear timestamps_hr timestamps_sec maxTime growthRates timestamps_corrected
     clear timeInPeriods timeInSeconds_middle timeInPeriods timestamps_trimmed timestep_sec
     
@@ -230,6 +238,7 @@ for period = 1:7
     % 1. isolate current period signal from both replicate
     rep1 = signals_all{1}{period};
     rep2 = signals_all{2}{period};
+    rep3 = signals_all{3}{period};
     
     
     % 2. ensure replicate data are of same length, trim if needed
@@ -238,9 +247,11 @@ for period = 1:7
         rl = [length(rep1); length(rep2)];
         rep_compiled(1,:) = rep1(1:min(rl));
         rep_compiled(2,:) = rep2(1:min(rl));
+        rep_compiled(3,:) = rep3(1:min(rl));
     else
         rep_compiled(1,:) = rep1;
         rep_compiled(2,:) = rep2;
+        rep_compiled(3,:) = rep3;
     end
     
     
@@ -270,5 +281,7 @@ for period = 1:7
     clear rep_compiled
 end
 
-
-
+%% D. statistical test for similarity between pairwise combinations of distributions
+%
+% statistical test for similarity between pairwise combinations of
+%          distributions from the same bin different periods 
