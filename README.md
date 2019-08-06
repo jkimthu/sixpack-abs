@@ -141,6 +141,9 @@ TABLE of CONTENTS:
 
 
 70. growth rate vs time for individual xys from a given condition, one expt
+		first, used to determine source of peaks in single shift data
+		second, used to plot different positions in x-position along steady envir % supp
+		
 71. growth rate vs time for sensitivity analysis using 2018-02-01 				% supp
 
 72. overlaid periods by increasing time - looking for adaptation				% 6C
